@@ -1,9 +1,6 @@
 package ar.edu.itba.pod.server;
 
-import com.hazelcast.config.Config;
-import com.hazelcast.config.InterfacesConfig;
-import com.hazelcast.config.ManagementCenterConfig;
-import com.hazelcast.config.NetworkConfig;
+import com.hazelcast.config.*;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import org.slf4j.Logger;
@@ -24,8 +21,14 @@ public class Server {
 
         InterfacesConfig interfacesConfig = new InterfacesConfig()
                 // TODO: CAMBIA CADA VEZ Q CAMBIAS DE RED
-                .setInterfaces(Collections.singletonList("10.9.64.*"))
+                .setInterfaces(Collections.singletonList("10.15.*.*"))
                 .setEnabled(true);
+
+        // EXCLUYENTE CON MULTICAST! PONER IP ESPECIFICA
+        JoinConfig join = networkConfig.getJoin();
+        join.getTcpIpConfig().addMember("10.15.18.171")
+                .setEnabled(true);
+
         networkConfig.setInterfaces(interfacesConfig);
 
         ManagementCenterConfig managementCenterConfig = new ManagementCenterConfig()
