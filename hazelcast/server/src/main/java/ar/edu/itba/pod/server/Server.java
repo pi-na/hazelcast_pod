@@ -1,26 +1,28 @@
 package ar.edu.itba.pod.server;
 
-import io.grpc.ServerBuilder;
+import com.hazelcast.core.Hazelcast;
+import com.hazelcast.core.HazelcastInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class Server {
     private static Logger logger = LoggerFactory.getLogger(Server.class);
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        logger.info(" Server Starting ...");
+        HazelcastInstance hz = Hazelcast.newHazelcastInstance();
 
-        int port = 50051;
-        io.grpc.Server server = ServerBuilder.forPort(port)
-                .build();
-        server.start();
-        logger.info("Server started, listening on " + port);
-        server.awaitTermination();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            logger.info("Shutting down gRPC server since JVM is shutting down");
-            server.shutdown();
-            logger.info("Server shut down");
-        }));
-    }}
+        Map<String, String> datos = hz.getMap("materias");
+        datos.put("72.42", "POD");
+
+        System.out.println(String.format("%d Datos en el cluster",
+                datos.size() ));
+
+        for (String key : datos.keySet()) {
+            System.out.println(String.format( "Datos con key %s= %s",
+                    key, datos.get(key)));
+            }
+        }
+}
