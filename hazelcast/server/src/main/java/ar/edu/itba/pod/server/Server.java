@@ -28,7 +28,7 @@ public class Server {
         JoinConfig join = networkConfig.getJoin();
         join.getTcpIpConfig().addMember("10.15.18.171")
                 .setEnabled(true);
-
+        networkConfig.setJoin(join);
         networkConfig.setInterfaces(interfacesConfig);
 
         ManagementCenterConfig managementCenterConfig = new ManagementCenterConfig()
