@@ -250,6 +250,8 @@ fabric.properties
 # that are supposed to be shared within teams.
 
 .idea/*
+/hazelcast/.idea/*
+*.csv
 
 !.idea/codeStyles
 !.idea/runConfigurations
