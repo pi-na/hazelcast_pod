@@ -35,7 +35,9 @@ public class Client {
 
             IMap<String, TotalTrips> iMap = hazelcastInstance.getMap("g5-total-trips");
 
+            System.out.println("🚀 Starting CsvDataLoader...");
             CsvDataLoader.run(params, true, iMap);
+            System.out.println("✅ CsvDataLoader finished.");
 
             KeyValueSource<String, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
 

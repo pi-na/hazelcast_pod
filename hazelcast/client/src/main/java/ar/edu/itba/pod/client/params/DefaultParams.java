@@ -28,9 +28,21 @@ public class DefaultParams {
         return outPath;
     }
 
-    public static DefaultParams getParams(String addresses, String inPath, String outPath) {
+    public static DefaultParams getParams(String addressesKey, String inPathKey, String outPathKey) {
+        String addresses = System.getProperty(addressesKey);
+        String inPath = System.getProperty(inPathKey);
+        String outPath = System.getProperty(outPathKey);
+
         if (addresses == null || addresses.isEmpty()) {
-            throw new IllegalArgumentException("A server address must be provided.");
+            throw new IllegalArgumentException("A server address must be provided. Use -Daddresses=<ip:port;ip:port>.");
+        }
+
+        if (inPath == null || inPath.isEmpty()) {
+            throw new IllegalArgumentException("An input path must be provided. Use -DinPath=<path_to_csv_directory>.");
+        }
+
+        if (outPath == null || outPath.isEmpty()) {
+            throw new IllegalArgumentException("An output path must be provided. Use -DoutPath=<output_directory>.");
         }
 
         List<PairAddressPort> addressesList = Arrays.stream(addresses.split(";"))
@@ -39,10 +51,7 @@ public class DefaultParams {
                     return new PairAddressPort(addressAndPort[0], addressAndPort.length > 1 ? addressAndPort[1] : "5701");
                 })
                 .toList();
-        return new DefaultParams(
-                addressesList,
-                inPath,
-                outPath
-        );
+
+        return new DefaultParams(addressesList, inPath, outPath);
     }
 }
