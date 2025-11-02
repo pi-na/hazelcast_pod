@@ -9,42 +9,38 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 public class Server {
-    private static Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
 
-    public static void main(String[] args) throws InterruptedException, IOException {
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance();
+    public static void main(String[] args) {
+        logger.info(" Server Starting ...");
 
         Config config = new Config();
-        NetworkConfig networkConfig = config.getNetworkConfig();
+
+        GroupConfig groupConfig = new GroupConfig().setName("g5").setPassword("g5");
+        config.setGroupConfig(groupConfig);
+
+        MulticastConfig multicastConfig = new MulticastConfig();
+
+        JoinConfig joinConfig = new JoinConfig().setMulticastConfig(multicastConfig);
 
         InterfacesConfig interfacesConfig = new InterfacesConfig()
-                // TODO: CAMBIA CADA VEZ Q CAMBIAS DE RED
-                .setInterfaces(Collections.singletonList("10.15.*.*"))
-                .setEnabled(true);
+                .setInterfaces(Collections.singletonList("10.6.1.*")).setEnabled(true);
 
-        // EXCLUYENTE CON MULTICAST! PONER IP ESPECIFICA
-        JoinConfig join = networkConfig.getJoin();
-        join.getTcpIpConfig().addMember("10.15.18.171")
-                .setEnabled(true);
-        networkConfig.setJoin(join);
-        networkConfig.setInterfaces(interfacesConfig);
+        NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig).setJoin(joinConfig);
 
-        ManagementCenterConfig managementCenterConfig = new ManagementCenterConfig()
-                .setUrl("http://localhost:8080/mancenter")
-                .setEnabled(true);
-        config.setManagementCenterConfig(managementCenterConfig);
+        config.setNetworkConfig(networkConfig);
 
-        Map<String, String> datos = hz.getMap("materias");
-        datos.put("72.42", "POD");
-
-        System.out.println(String.format("%d Datos en el cluster",
-                datos.size() ));
-
-        for (String key : datos.keySet()) {
-            System.out.println(String.format( "Datos con key %s= %s",
-                    key, datos.get(key)));
-            }
+        java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
+        rootLogger.setLevel(Level.FINE);
+        for (Handler h : rootLogger.getHandlers()) {
+            h.setLevel(Level.FINE);
         }
+
+        Hazelcast.newHazelcastInstance(config);
+    }
 }
