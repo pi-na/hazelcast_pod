@@ -6,5 +6,7 @@ public interface TotalTrips{
     String getDropoffZone();
     Double getBasePassengerFare();
     String getCompany();
+    Double getBase_passenger_fare();
+    String getPickupBorough();
 
 }

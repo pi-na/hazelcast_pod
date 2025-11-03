@@ -29,7 +29,7 @@ public class AveragePriceCollator
             AveragePriceResult result = new AveragePriceResult(boroughKey, companyKey, avgFare);
             results.put(key, result);
         }
-
+        System.out.println("results: " + results);
         return results;
     }
 }

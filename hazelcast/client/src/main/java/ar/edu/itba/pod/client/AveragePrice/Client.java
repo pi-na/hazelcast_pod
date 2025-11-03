@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 
-public class Client extends QueryCLient<CompanyTrips> {
+public class Client extends QueryCLient {
 
     private static final String QUERY3_CSV = "query3.csv";
     private static final String QUERY3_HEADERS = "pickUpBorough;company;avgFare";
@@ -38,15 +38,15 @@ public class Client extends QueryCLient<CompanyTrips> {
     public Client() throws IOException, ExecutionException, InterruptedException {super();}
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException{
-        QueryCLient queryCLient = new ar.edu.itba.pod.client.AveragePrice.Client();
+        QueryCLient queryCLient = new Client();
     }
 
     @Override
-    public void finishQuery(IMap<String, CompanyTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
-        KeyValueSource<String, CompanyTrips> keyValueSource = KeyValueSource.fromMap(iMap);
+    public void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
+        KeyValueSource<Long, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
 
         JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
-        Job<String, CompanyTrips> job = jobTracker.newJob(keyValueSource);
+        Job<Long, TotalTrips> job = jobTracker.newJob(keyValueSource);
 
         ICompletableFuture<Map<String, AveragePriceResult>> future = job
                 .mapper(new AveragePriceMapper())
@@ -54,14 +54,13 @@ public class Client extends QueryCLient<CompanyTrips> {
                 .reducer(new AveragePriceReducerFactory())
                 .submit(new AveragePriceCollator());
 
-
         Map<String, AveragePriceResult> result = future.get();
+        logger.info(result.size() + " results found");
         SortedSet<AveragePriceResult> finalResult = new TreeSet<>(
                 Comparator.comparing(AveragePriceResult::getAvgFare).reversed()
                         .thenComparing(AveragePriceResult::getPickUpBorough)
                         .thenComparing(AveragePriceResult::getCompany));
         finalResult.addAll(result.values());
-
         ResultCsvWriter.writeCsv(params.getOutPath(), QUERY3_CSV, QUERY3_HEADERS, finalResult);
     }
 
@@ -72,7 +71,7 @@ public class Client extends QueryCLient<CompanyTrips> {
 
         Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
 
-        Stream<Trip> tripStream = lines
+        Stream <Trip> tripStream = lines
                 .skip(1)
                 .map(String::trim)
                 .map(line -> line.split(DIVIDER, -1))
@@ -87,7 +86,6 @@ public class Client extends QueryCLient<CompanyTrips> {
                     if (z == null) return false;
                     return !(OUTSIDE.equalsIgnoreCase(z.getZoneName()) || OUTSIDE.equalsIgnoreCase(z.getBorough()));
                 })
-                .limit(1_000_000L)
                 .map(cols -> parseTrip(cols, zones));
 
         return tripStream.onClose(lines::close);
