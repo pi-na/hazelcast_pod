@@ -76,7 +76,32 @@ public abstract class QueryCLient {
 
     public abstract void finishQuery(IMap<String, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
 
-    public abstract Trip parseTrip(String[] cols, Map<Integer, Zone> zones);
+    public static Trip parseTrip(String[] cols, Map<Integer, Zone> zones){
+        Trip trip = new Trip();
+        trip.setCompany(cols[TripsColumns.COMPANY.getIndex()]);
+        trip.setRequest_datetime(cols[TripsColumns.REQUEST_DATETIME.getIndex()]);
+        trip.setPickup_datetime(cols[TripsColumns.PICKUP_DATETIME.getIndex()]);
+        trip.setDropoff_datetime(cols[TripsColumns.DROPOFF_DATETIME.getIndex()]);
+
+        int puCode = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+        int doCode = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+
+        trip.setPULocation(puCode);
+        trip.setDOLocation(doCode);
+        trip.setTrip_miles(Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()]));
+        trip.setBase_passenger_fare(Double.parseDouble(cols[TripsColumns.BASE_PASSENGER_FARE.getIndex()]));
+
+        Zone puZone = zones.get(puCode);
+        Zone doZone = zones.get(doCode);
+        if (puZone != null) {
+            trip.setPickup_location(puZone.getZoneName());
+        }
+        if (doZone != null) {
+            trip.setDropoff_location(doZone.getZoneName());
+        }
+
+        return trip;
+    }
 
     public abstract Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException;
 
