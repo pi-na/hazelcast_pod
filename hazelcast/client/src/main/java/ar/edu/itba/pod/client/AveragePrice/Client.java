@@ -1,32 +1,13 @@
 package ar.edu.itba.pod.client.AveragePrice;
 
+import ar.edu.itba.pod.api.AveragePrice.*;
+import ar.edu.itba.pod.api.common.PairFiles;
+import ar.edu.itba.pod.api.common.Trip;
+import ar.edu.itba.pod.api.common.Zone;
 import ar.edu.itba.pod.api.enums.Params;
-import ar.edu.itba.pod.api.totalTrips.*;
+import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.CsvDataLoader;
-import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
-import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
-import com.hazelcast.client.HazelcastClient;
-import com.hazelcast.core.HazelcastInstance;
-import com.hazelcast.core.ICompletableFuture;
-import com.hazelcast.core.IMap;
-import com.hazelcast.mapreduce.Job;
-import com.hazelcast.mapreduce.JobTracker;
-import com.hazelcast.mapreduce.KeyValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutionException;
-
-import ar.edu.itba.pod.api.enums.Params;
-import ar.edu.itba.pod.api.totalTrips.*;
-        import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.CsvDataLoader;
+import ar.edu.itba.pod.client.AveragePrice.CsvDataLoaderAvgPrice;
 import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
 import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
 import com.hazelcast.client.HazelcastClient;
@@ -41,46 +22,58 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.*;
-        import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutionException;
+
 
 public class Client {
+    private static final Logger LOG = LoggerFactory.getLogger(Client.class);
 
-    private static final String QUERY1_CSV = "query3.csv";
-    private static final String QUERY1_CSV_HEADERS = "pickUpBorough;company;avgFare";
+    private static final String QUERY3_CSV = "query3.csv";
+    private static final String QUERY3_HEADERS = "pickUpBorough;company;avgFare";
 
-    private static final Logger logger = LoggerFactory.getLogger(ar.edu.itba.pod.client.totalTrips.Client.class);
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+        DefaultParams params = DefaultParams.getParams(
+                Params.ADDRESSES.getParam(),
+                Params.INPATH.getParam(),
+                Params.OUTPATH.getParam()
+        );
 
-    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException{
-        DefaultParams params = DefaultParams.getParams(Params.ADDRESSES.getParam(),
-                Params.INPATH.getParam(),  Params.OUTPATH.getParam());
         try {
+
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
 
-            IMap<String, TotalTrips> iMap = hazelcastInstance.getMap("g5-total-trips");
+            IMap<String, CompanyTrips> iMap = hazelcastInstance.getMap("g5-average-price-input");
 
             System.out.println("🚀 Starting CsvDataLoader...");
-            CsvDataLoader.run(params, true, iMap);
+            CsvDataLoaderAvgPrice.run(params, true, iMap);
             System.out.println("✅ CsvDataLoader finished.");
 
-            KeyValueSource<String, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
+            KeyValueSource<String, CompanyTrips> keyValueSource = KeyValueSource.fromMap(iMap);
 
-            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
-            Job<String, TotalTrips> job = jobTracker.newJob(keyValueSource);
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
+            Job<String, CompanyTrips> job = jobTracker.newJob(keyValueSource);
 
-            ICompletableFuture<Map<String, TotalTripsResult>> future = job
-                    .mapper(new TotalTripsMapper())
-                    .combiner(new TotalTripsCombinerFactory())
-                    .reducer(new TotalTripsReducerFactory())
-                    .submit(new TotalTripsCollator());
+            ICompletableFuture<Map<String, AveragePriceResult>> fut = job
+                    .mapper(new AveragePriceMapper())
+                    .combiner(new AveragePriceCombinerFactory())
+                    .reducer(new AveragePriceReducerFactory())
+                    .submit(new AveragePriceCollator());
 
 
-            Map<String, TotalTripsResult> result = future.get();
-            SortedSet<TotalTripsResult> finalResult = new TreeSet<>(
-                    Comparator.comparing(TotalTripsResult::total).reversed()
-                            .thenComparing(TotalTripsResult::pickUpZone)
-                            .thenComparing(TotalTripsResult::dropOffZone));
+            Map<String, AveragePriceResult> map = fut.get();
+            LOG.info("MR listo. resultados={}", (map==null?0:map.size()));
 
-            ResultCsvWriter.writeCsv(params.getOutPath(), QUERY1_CSV, QUERY1_CSV_HEADERS, finalResult);
+            SortedSet<AveragePriceResult> list = new TreeSet<>(
+                    Comparator
+                    .comparing(AveragePriceResult::getAvgFare).reversed()
+                    .thenComparing(AveragePriceResult::getPickUpBorough)
+                    .thenComparing(AveragePriceResult::getCompany));
+            list.addAll(map.values());
+            ResultCsvWriter.writeCsv(params.getOutPath(), QUERY3_CSV, QUERY3_HEADERS, list);
+
+            LOG.info("CSV '{}' generado en outPath='{}' con {} filas.",
+                    QUERY3_CSV, params.getOutPath(), list.size());
+
         } finally {
             HazelcastClient.shutdownAll();
         }
