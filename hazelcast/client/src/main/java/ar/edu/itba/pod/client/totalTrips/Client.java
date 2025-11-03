@@ -73,9 +73,8 @@ public class Client extends QueryCLient {
         Stream<Trip> tripStream= lines
                 .skip(1)
                 .map(String::trim)
-                .filter(line -> !line.isEmpty())
                 .map(line -> line.split(DIVIDER))
-                .filter(cols -> cols.length >= 8)
+                //QUERY1 pide que solo se consideren los que salen y llegan a zonas difrentes
                 .filter(cols -> {
                     int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
                     int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
@@ -91,28 +90,5 @@ public class Client extends QueryCLient {
                 .limit(100000)
                 .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
-    }
-
-    @Override
-    public Trip parseTrip(String[] cols, Map<Integer, Zone> zones) {
-        Trip trip = new Trip();
-        int puCode = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
-        int doCode = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
-
-        trip.setPULocation(puCode);
-        trip.setDOLocation(doCode);
-        trip.setTrip_miles(Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()]));
-        trip.setBase_passenger_fare(Double.parseDouble(cols[TripsColumns.BASE_PASSENGER_FARE.getIndex()]));
-
-        Zone puZone = zones.get(puCode);
-        Zone doZone = zones.get(doCode);
-        if (puZone != null) {
-            trip.setPickup_location(puZone.getZoneName());
-        }
-        if (doZone != null) {
-            trip.setDropoff_location(doZone.getZoneName());
-        }
-
-        return trip;
     }
 }
