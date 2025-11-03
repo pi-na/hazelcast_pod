@@ -101,7 +101,6 @@ public class CsvDataLoader {
                         return zones.containsKey(pu) && zones.containsKey(doL);
                     })
                     //TODO: esto es a modo de test, habria que ver como hacerlo ams eficiente con todos los
-                    .limit(1000)
                 .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
     }

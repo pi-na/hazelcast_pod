@@ -28,4 +28,16 @@ public final class ResultCsvWriter {
         Files.write(outputPath, lines, StandardCharsets.UTF_8);
     }
 
+    public static <T> void writeCsv(String outPath, String fileName, String header, List<T> results) throws IOException {
+        Path outputPath = Paths.get(outPath).resolve(fileName);
+        Files.createDirectories(outputPath.getParent());
+
+        List<String> lines = results.stream()
+                .map(Object::toString)
+                .collect(Collectors.toList());
+
+        lines.add(HEADER_LINE, header);
+        Files.write(outputPath, lines, StandardCharsets.UTF_8);
+    }
+
 }
