@@ -29,7 +29,7 @@ public class Server {
         JoinConfig joinConfig = new JoinConfig().setMulticastConfig(multicastConfig);
 
         InterfacesConfig interfacesConfig = new InterfacesConfig()
-                .setInterfaces(Collections.singletonList("10.6.1.*")).setEnabled(true);
+                .setInterfaces(Collections.singletonList("127.0.0.1")).setEnabled(true);
 
         NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig).setJoin(joinConfig);
 

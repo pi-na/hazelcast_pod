@@ -1,5 +1,6 @@
 package ar.edu.itba.pod.api.common;
 
+import ar.edu.itba.pod.api.longestTrip.LongestTrip;
 import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
@@ -7,7 +8,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
 
-public class Trip implements DataSerializable, TotalTrips {
+public class Trip implements DataSerializable, TotalTrips, LongestTrip {
     private String company;
     private String request_datetime;
     private String pickup_datetime;
@@ -86,5 +87,25 @@ public class Trip implements DataSerializable, TotalTrips {
     @Override
     public String getDropoffZone() {
         return dropoff_location;
+    }
+
+    public String getCompany() {
+        return company;
+    }
+
+    public String getRequest_datetime() {
+        return request_datetime;
+    }
+
+    public Double getTrip_miles() {
+        return trip_miles;
+    }
+
+    public Integer getPULocation() {
+        return PULocation;
+    }
+
+    public Integer getDOLocation() {
+        return DOLocation;
     }
 }
