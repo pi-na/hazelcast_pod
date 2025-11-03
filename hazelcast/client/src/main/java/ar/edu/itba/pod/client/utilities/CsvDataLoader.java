@@ -12,8 +12,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -44,7 +42,7 @@ public class CsvDataLoader {
         String zonesFile = null;
         for (File file : files) {
             if (file.isFile() && file.getName().endsWith(CSV_EXTENSION)) {
-                if (!file.getName().contains(TRIPS_IDENTIFIER)) {
+                if (file.getName().contains(TRIPS_IDENTIFIER)) {
                     tripsFile = file.getAbsolutePath();
                 }
                 if (file.getName().contains(ZONES_IDENTIFIER)) {
@@ -54,43 +52,49 @@ public class CsvDataLoader {
         }
 
         if (tripsFile == null || zonesFile == null) {
-            throw new IllegalArgumentException("");
+            throw new IllegalArgumentException("Trips or zones CSV not found in: " + inPath);
         }
 
         return new PairFiles(tripsFile, zonesFile);
     }
 
-    private static List<Trip> genericParseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones, String borough){
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-        try (Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8)) {
-            return lines.skip(1)
-                    .map(line -> line.split(DIVIDER))
-                    .filter(cols -> !filterByZone ||
-                            (zones.containsKey(Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim())) &&
-                                    zones.containsKey(Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim()))))
-                    .map(cols -> {
-                        Trip trip = new Trip();
-                        trip.setCompany(cols[TripsColumns.COMPANY.getIndex()].trim());
-                        trip.setRequest_datetime(cols[TripsColumns.REQUEST_DATETIME.getIndex()].trim());
-                        trip.setPickup_datetime(cols[TripsColumns.PICKUP_DATETIME.getIndex()].trim());
-                        trip.setDropoff_datetime(cols[TripsColumns.DROPOFF_DATETIME.getIndex()].trim());
-                        trip.setPULocation(Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim()));
-                        trip.setDOLocation(Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim()));
-                        trip.setTrip_miles(Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()].trim()));
-                        trip.setBase_passenger_fare(Double.parseDouble(cols[TripsColumns.BASE_PASSENGER_FARE.getIndex()].trim()));
-                        return trip;
-                    })
-                    .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException("Error reading trips file: " + files.gettripsFile(), e);
-        }
+    private static Trip parseTrip(String[] cols) {
+        Trip trip = new Trip();
+        trip.setCompany(cols[TripsColumns.COMPANY.getIndex()]);
+        trip.setRequest_datetime(cols[TripsColumns.REQUEST_DATETIME.getIndex()]);
+        trip.setPickup_datetime(cols[TripsColumns.PICKUP_DATETIME.getIndex()]);
+        trip.setDropoff_datetime(cols[TripsColumns.DROPOFF_DATETIME.getIndex()]);
+        trip.setPULocation(Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()]));
+        trip.setDOLocation(Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()]));
+        trip.setTrip_miles(Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()]));
+        trip.setBase_passenger_fare(Double.parseDouble(cols[TripsColumns.BASE_PASSENGER_FARE.getIndex()]));
+        return trip;
     }
 
-    private static List<Trip> parseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones) throws IOException {
+    private static Stream<Trip> genericParseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones, String borough) throws IOException {
+        Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
+        Stream<Trip> tripStream= lines
+                    .skip(1)
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .map(line -> line.split(DIVIDER))
+                    .filter(cols -> cols.length >= 8)
+                    //TODO esto se puede sacar a una funcion que se llame solo si me mandaron filterByZone
+                    .filter(cols -> {
+                        if (!filterByZone) return true;
+                        int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+                        int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+                        return zones.containsKey(pu) && zones.containsKey(doL);
+                    })
+                    .map(CsvDataLoader::parseTrip);
+        return tripStream.onClose(lines::close);
+    }
+
+    private static Stream<Trip> parseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones) throws IOException {
         return genericParseRows(files, filterByZone, zones, null);
     }
 
-    private static List<Trip> parseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones, String borough) throws IOException {
+    private static Stream<Trip> parseRows(PairFiles files, boolean filterByZone, Map<Integer, Zone> zones, String borough) throws IOException {
         return genericParseRows(files, filterByZone, zones, borough);
     }
 
@@ -111,13 +115,12 @@ public class CsvDataLoader {
 
     public static <V> void run(DefaultParams params, boolean filterByZone, IMap<String, V> iMap) throws IOException {
         PairFiles csvsPath = getFilesPath(params.getInPath());
-        String borough = null; //TODO esto si DefaultParams es instance of BoroughParams deberia llamar a otro ParseRows
         Map<Integer, Zone> zones = getZones(csvsPath.getzonesFiles());
-        List<Trip> rows = borough == null ? parseRows(csvsPath, filterByZone, zones) : parseRows(csvsPath, filterByZone, zones, borough);
-        final AtomicInteger auxKey = new AtomicInteger();
-        rows.forEach(row -> {
-            V value = (V) row;
-            iMap.put(String.valueOf(auxKey.getAndIncrement()), value);
-        });
+        try (Stream<Trip> rows = parseRows(csvsPath, filterByZone, zones)) {
+            final AtomicInteger auxKey = new AtomicInteger();
+            rows.parallel().forEach(row -> {
+                iMap.putAsync(String.valueOf(auxKey.getAndIncrement()), (V) row);
+            });
+        }
     }
 }
