@@ -35,7 +35,7 @@ public abstract class QueryCLient {
                 Params.INPATH.getParam(),  Params.OUTPATH.getParam());
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-            IMap<String, TotalTrips> iMap = hazelcastInstance.getMap("g5");
+            IMap<Long, TotalTrips> iMap = hazelcastInstance.getMap("g5");
             run(params, iMap);
             finishQuery(iMap, hazelcastInstance, params);
         }finally {
@@ -74,7 +74,7 @@ public abstract class QueryCLient {
         return new PairFiles(tripsFile, zonesFile);
     }
 
-    public abstract void finishQuery(IMap<String, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
+    public abstract void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
 
     public static Trip parseTrip(String[] cols, Map<Integer, Zone> zones){
         Trip trip = new Trip();
@@ -128,13 +128,13 @@ public abstract class QueryCLient {
         }
     }
 
-    public  <V> void run(DefaultParams params, IMap<String, V> iMap) throws IOException {
+    public  <V> void run(DefaultParams params, IMap<Long, V> iMap) throws IOException {
         PairFiles csvsPath = getFilesPath(params.getInPath());
         Map<Integer, Zone> zones = getZones(csvsPath.getzonesFiles());
         try (Stream<Trip> rows = parseRows(csvsPath, zones)) {
             final AtomicInteger auxKey = new AtomicInteger();
             rows.parallel().forEach(row -> {
-                iMap.putAsync(String.valueOf(auxKey.getAndIncrement()), (V) row);
+                iMap.putAsync((long) auxKey.getAndIncrement(), (V) row);
             });
         }
     }

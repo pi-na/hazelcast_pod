@@ -44,11 +44,11 @@ public class Client extends QueryCLient {
     }
 
     @Override
-    public void finishQuery(IMap<String, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
-        KeyValueSource<String, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
+    public void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
+        KeyValueSource<Long, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
 
         JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
-        Job<String, TotalTrips> job = jobTracker.newJob(keyValueSource);
+        Job<Long, TotalTrips> job = jobTracker.newJob(keyValueSource);
 
         ICompletableFuture<Map<String, TotalTripsResult>> future = job
                 .mapper(new TotalTripsMapper())
@@ -80,14 +80,11 @@ public class Client extends QueryCLient {
                     int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
                     return pu != doL;
                 })
-                //TODO esto se puede sacar a una funcion que se llame solo si me mandaron filterByZone
                 .filter(cols -> {
                     int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
                     int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
                     return zones.containsKey(pu) && zones.containsKey(doL);
                 })
-                //TODO: esto es a modo de test, habria que ver como hacerlo ams eficiente con todos los
-                .limit(100000)
                 .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
     }
