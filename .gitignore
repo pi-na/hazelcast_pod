@@ -258,3 +258,8 @@ fabric.properties
 
 # End of https://www.toptal.com/developers/gitignore/api/intellij+all,intellij
 
+query*.csv
+time*.txt
+
+zones.csv
+trips-2025-01.csv
