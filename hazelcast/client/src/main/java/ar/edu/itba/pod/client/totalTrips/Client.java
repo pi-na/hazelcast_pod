@@ -56,6 +56,7 @@ public class Client {
                     Comparator.comparing(TotalTripsResult::total).reversed()
                             .thenComparing(TotalTripsResult::pickUpZone)
                             .thenComparing(TotalTripsResult::dropOffZone));
+            finalResult.addAll(result.values());
 
             ResultCsvWriter.writeCsv(params.getOutPath(), QUERY1_CSV, QUERY1_CSV_HEADERS, finalResult);
         } finally {

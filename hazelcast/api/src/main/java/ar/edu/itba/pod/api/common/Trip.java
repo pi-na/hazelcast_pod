@@ -1,40 +1,50 @@
 package ar.edu.itba.pod.api.common;
 
+import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
 
-public class Trip implements DataSerializable {
+public class Trip implements DataSerializable, TotalTrips {
     private String company;
     private String request_datetime;
     private String pickup_datetime;
     private String dropoff_datetime;
     private Integer PULocation;
     private Integer DOLocation;
+    private String  pickup_location;
+    private String dropoff_location;
     private Double trip_miles;
     private Double base_passenger_fare;
 
     @Override
-    public void writeData(ObjectDataOutput objectDataOutput) throws IOException {
-        objectDataOutput.writeUTF(company);
-        objectDataOutput.writeUTF(request_datetime);
-        objectDataOutput.writeUTF(pickup_datetime);
-        objectDataOutput.writeUTF(dropoff_datetime);
-        objectDataOutput.writeInt(PULocation);
-        objectDataOutput.writeInt(DOLocation);
-        objectDataOutput.writeDouble(trip_miles);
+    public void writeData(ObjectDataOutput out) throws IOException {
+        out.writeUTF(company);
+        out.writeUTF(request_datetime);
+        out.writeUTF(pickup_datetime);
+        out.writeUTF(dropoff_datetime);
+        out.writeInt(PULocation);
+        out.writeInt(DOLocation);
+        out.writeUTF(pickup_location);
+        out.writeUTF(dropoff_location);
+        out.writeDouble(trip_miles);
+        out.writeDouble(base_passenger_fare);
     }
 
     @Override
-    public void readData(ObjectDataInput objectDataInput) throws IOException {
-        company = objectDataInput.readUTF();
-        request_datetime = objectDataInput.readUTF();
-        pickup_datetime = objectDataInput.readUTF();
-        dropoff_datetime = objectDataInput.readUTF();
-        PULocation = objectDataInput.readInt();
-        DOLocation = objectDataInput.readInt();
+    public void readData(ObjectDataInput in) throws IOException {
+        company = in.readUTF();
+        request_datetime = in.readUTF();
+        pickup_datetime = in.readUTF();
+        dropoff_datetime = in.readUTF();
+        PULocation = in.readInt();
+        DOLocation = in.readInt();
+        pickup_location = in.readUTF();
+        dropoff_location = in.readUTF();
+        trip_miles = in.readDouble();
+        base_passenger_fare = in.readDouble();
     }
 
     public void setCompany(String company) {
@@ -55,10 +65,26 @@ public class Trip implements DataSerializable {
     public void setDOLocation(Integer DOLocation) {
         this.DOLocation = DOLocation;
     }
+    public void setPickup_location(String pickup_location) {
+        this.pickup_location = pickup_location;
+    }
+    public void setDropoff_location(String dropoff_location) {
+        this.dropoff_location = dropoff_location;
+    }
     public void setTrip_miles(Double trip_miles) {
         this.trip_miles = trip_miles;
     }
     public void setBase_passenger_fare(Double base_passenger_fare) {
         this.base_passenger_fare = base_passenger_fare;
+    }
+
+    @Override
+    public String getPickUpZone() {
+        return pickup_location;
+    }
+
+    @Override
+    public String getDropoffZone() {
+        return dropoff_location;
     }
 }
