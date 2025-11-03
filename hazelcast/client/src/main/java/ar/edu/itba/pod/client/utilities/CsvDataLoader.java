@@ -58,16 +58,30 @@ public class CsvDataLoader {
         return new PairFiles(tripsFile, zonesFile);
     }
 
-    private static Trip parseTrip(String[] cols) {
+    private static Trip parseTrip(String[] cols, Map<Integer, Zone> zones) {
         Trip trip = new Trip();
         trip.setCompany(cols[TripsColumns.COMPANY.getIndex()]);
         trip.setRequest_datetime(cols[TripsColumns.REQUEST_DATETIME.getIndex()]);
         trip.setPickup_datetime(cols[TripsColumns.PICKUP_DATETIME.getIndex()]);
         trip.setDropoff_datetime(cols[TripsColumns.DROPOFF_DATETIME.getIndex()]);
-        trip.setPULocation(Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()]));
-        trip.setDOLocation(Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()]));
+
+        int puCode = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+        int doCode = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+
+        trip.setPULocation(puCode);
+        trip.setDOLocation(doCode);
         trip.setTrip_miles(Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()]));
         trip.setBase_passenger_fare(Double.parseDouble(cols[TripsColumns.BASE_PASSENGER_FARE.getIndex()]));
+
+        Zone puZone = zones.get(puCode);
+        Zone doZone = zones.get(doCode);
+        if (puZone != null) {
+            trip.setPickup_location(puZone.getZoneName());
+        }
+        if (doZone != null) {
+            trip.setDropoff_location(doZone.getZoneName());
+        }
+
         return trip;
     }
 
@@ -86,7 +100,9 @@ public class CsvDataLoader {
                         int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
                         return zones.containsKey(pu) && zones.containsKey(doL);
                     })
-                    .map(CsvDataLoader::parseTrip);
+                    //TODO: esto es a modo de test, habria que ver como hacerlo ams eficiente con todos los 
+                    .limit(1000)
+                .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
     }
 
