@@ -87,4 +87,8 @@ public class Trip implements DataSerializable, TotalTrips {
     public String getDropoffZone() {
         return dropoff_location;
     }
+
+    public Double getBase_passenger_fare() {
+        return base_passenger_fare;
+    }
 }

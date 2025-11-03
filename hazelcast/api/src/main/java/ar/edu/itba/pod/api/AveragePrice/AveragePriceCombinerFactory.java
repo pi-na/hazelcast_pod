@@ -32,7 +32,7 @@ public class AveragePriceCombinerFactory implements CombinerFactory<AverageKeyOu
 
         @Override
         public void reset() {
-            sum = 0d;
+            sum = 0L;
             count = 0L;
         }
     }

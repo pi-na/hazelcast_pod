@@ -29,7 +29,7 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-public class Client extends QueryCLient {
+public class Client extends QueryCLient<TotalTrips> {
 
     private static final String QUERY1_CSV = "query1.csv";
     private static final String QUERY1_CSV_HEADERS = "pickUpZone;dropOffZone;trips";

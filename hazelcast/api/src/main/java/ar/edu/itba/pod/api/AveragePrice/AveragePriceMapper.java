@@ -19,8 +19,18 @@ public class AveragePriceMapper
 
     @Override
     public void map(String key, CompanyTrips value, Context<AverageKeyOut, AveragePriceAccumulator> context) {
+        if (value == null) return;
+
+        String borough = value.getBorough();
+        String company = value.getCompany();
+        Double fare = value.getBasePassengerFare();
+
+        if (borough == null || company == null || fare == null) return;
+        if ("Outside of NYC".equalsIgnoreCase(borough)) return;
+
         context.emit(
-                new AverageKeyOut(value.getBorough(), value.getCompany()), ONE
+                new AverageKeyOut(borough, company),
+                new AveragePriceAccumulator(fare, 1)
         );
     }
 }
