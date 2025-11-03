@@ -44,10 +44,11 @@ echo ""
 echo "Which query do you want to run?"
 echo "1) Query 1 - Total trips by pickup and dropoff zone"
 echo "2) Query 2 - Longest trip within NYC by pickup zone"
-read -p "Enter your choice (1 or 2): " QUERY_CHOICE
+echo "5) Query 5 - Total YTD miles by company"
+read -p "Enter your choice (1, 2, or 5): " QUERY_CHOICE
 
-if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" ]]; then
-  echo "❌ Invalid choice. Please run the script again and select 1 or 2."
+if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" && "$QUERY_CHOICE" != "5" ]]; then
+  echo "❌ Invalid choice. Please run the script again and select 1, 2, or 5."
   exit 1
 fi
 
@@ -81,10 +82,16 @@ if [ "$QUERY_CHOICE" == "1" ]; then
   echo "✅ Query 1 finished!"
   echo "📄 Results written to: $MYPATH/query1.csv"
   echo "⏱️  Time log written to: $MYPATH/time1.txt"
-else
+elif [ "$QUERY_CHOICE" == "2" ]; then
   echo "💻 Running Query 2..."
   ./query2.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
   echo "✅ Query 2 finished!"
   echo "📄 Results written to: $MYPATH/query2.csv"
   echo "⏱️  Time log written to: $MYPATH/time2.txt"
+else
+  echo "💻 Running Query 5..."
+  ./query5.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
+  echo "✅ Query 5 finished!"
+  echo "📄 Results written to: $MYPATH/query5.csv"
+  echo "⏱️  Time log written to: $MYPATH/time5.txt"
 fi
