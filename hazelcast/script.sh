@@ -38,7 +38,20 @@ for MODULE in "${MODULES[@]}"; do
 done
 
 echo "🎉 All modules built and unpacked successfully!"
-echo "🚀 Starting Hazelcast cluster and running Query 1..."
+
+# Ask which query to run
+echo ""
+echo "Which query do you want to run?"
+echo "1) Query 1 - Total trips by pickup and dropoff zone"
+echo "2) Query 2 - Longest trip within NYC by pickup zone"
+read -p "Enter your choice (1 or 2): " QUERY_CHOICE
+
+if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" ]]; then
+  echo "❌ Invalid choice. Please run the script again and select 1 or 2."
+  exit 1
+fi
+
+echo "🚀 Starting Hazelcast cluster and running Query $QUERY_CHOICE..."
 
 # Paths to server and client
 SERVER_DIR="server/target/$(ls server/target | grep tpe2-g5-server- | head -n 1)"
@@ -57,9 +70,21 @@ osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/$SERVER_DIR
 echo "⏳ Waiting for cluster to initialize..."
 sleep 10
 
-# Run client (Query 1)
-echo "💻 Running Query 1..."
+# Run client based on selection
 cd "$CLIENT_DIR"
-./query1.sh -Daddresses='10.5.14.249:5701;10.5.14.249:5702' -DinPath=/Users/agostinasquillari/Documents/ITBA/4to_1C/POD/tp2/hazelcast_pod -DoutPath=/Users/agostinasquillari/Documents/ITBA/4to_1C/POD/tp2/hazelcast_pod
+MYPATH="/Users/jperalb/Documents/ITBA/POD/hazelcast_pod"
+ADDRESS="127.0.0.1:5701;127.0.0.1:5702"
 
-echo "✅ Query 1 finished!"
+if [ "$QUERY_CHOICE" == "1" ]; then
+  echo "💻 Running Query 1..."
+  ./query1.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
+  echo "✅ Query 1 finished!"
+  echo "📄 Results written to: $MYPATH/query1.csv"
+  echo "⏱️  Time log written to: $MYPATH/time1.txt"
+else
+  echo "💻 Running Query 2..."
+  ./query2.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
+  echo "✅ Query 2 finished!"
+  echo "📄 Results written to: $MYPATH/query2.csv"
+  echo "⏱️  Time log written to: $MYPATH/time2.txt"
+fi
