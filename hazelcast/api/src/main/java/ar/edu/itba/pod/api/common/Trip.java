@@ -18,6 +18,7 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
     private Integer PULocation;
     private Integer DOLocation;
     private String  pickup_location;
+    private String  pickup_borough;
     private String dropoff_location;
     private Double trip_miles;
     private Double base_passenger_fare;
@@ -31,6 +32,7 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
         out.writeInt(PULocation);
         out.writeInt(DOLocation);
         out.writeUTF(pickup_location);
+        out.writeUTF(pickup_borough);
         out.writeUTF(dropoff_location);
         out.writeDouble(trip_miles);
         out.writeDouble(base_passenger_fare);
@@ -45,6 +47,7 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
         PULocation = in.readInt();
         DOLocation = in.readInt();
         pickup_location = in.readUTF();
+        pickup_borough = in.readUTF();
         dropoff_location = in.readUTF();
         trip_miles = in.readDouble();
         base_passenger_fare = in.readDouble();
@@ -71,6 +74,9 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
     public void setPickup_location(String pickup_location) {
         this.pickup_location = pickup_location;
     }
+    public void setPickup_borough(String pickup_borough) {
+        this.pickup_borough = pickup_borough;
+    }
     public void setDropoff_location(String dropoff_location) {
         this.dropoff_location = dropoff_location;
     }
@@ -91,8 +97,23 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
         return dropoff_location;
     }
 
+    @Override
     public String getCompany() {
         return company;
+    }
+
+    @Override
+    public String getPickupBorough() {
+        return pickup_borough;
+    }
+
+    @Override
+    public Double getBase_passenger_fare() {
+        return base_passenger_fare;
+    }
+
+    public Double getBasePassengerFare() {
+        return base_passenger_fare;
     }
 
     public String getRequest_datetime() {
@@ -109,8 +130,5 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
 
     public Integer getDOLocation() {
         return DOLocation;
-    }
-    public Double getBasePassengerFare() {
-        return base_passenger_fare;
     }
 }

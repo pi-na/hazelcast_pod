@@ -15,7 +15,7 @@ public class AveragePriceCombinerFactory implements CombinerFactory<AverageKeyOu
     }
 
     private static class AveragePriceCombiner extends Combiner<AveragePriceAccumulator, AveragePriceAccumulator> {
-        private long sum = 0L;
+        private double sum = 0.0;
         private long count = 0L;
         @Override
         public void combine(AveragePriceAccumulator value) {
@@ -32,7 +32,7 @@ public class AveragePriceCombinerFactory implements CombinerFactory<AverageKeyOu
 
         @Override
         public void reset() {
-            sum = 0L;
+            sum = 0.0;
             count = 0L;
         }
     }

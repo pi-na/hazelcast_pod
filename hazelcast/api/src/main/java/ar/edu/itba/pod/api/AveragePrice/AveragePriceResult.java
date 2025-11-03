@@ -36,6 +36,8 @@ public class AveragePriceResult implements Serializable, Comparable<AveragePrice
 
     @Override
     public String toString() {
-        return String.format("%s;%s;%f", pickUpBorough, company, avgFare);
+        // Truncate to 2 decimals (not round)
+        double truncatedFare = Math.floor(avgFare * 100) / 100.0;
+        return String.format("%s;%s;%.2f", pickUpBorough, company, truncatedFare);
     }
 }
