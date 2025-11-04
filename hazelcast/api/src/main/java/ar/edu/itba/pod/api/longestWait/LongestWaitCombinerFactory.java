@@ -20,7 +20,7 @@ public class LongestWaitCombinerFactory implements CombinerFactory<Long, Longest
         public void combine(LongestWaitReducerValue value) {
             if (currentMax == null ||   // Desempata por orden alfabetico ascendiente (si la nueva tiene menor, la guardo)
                     value.waitTimeMillis() > currentMax.waitTimeMillis() ||
-                    value.waitTimeMillis().equals(currentMax.waitTimeMillis()) && value.doLocationName().compareTo(currentMax.doLocationName()) < 0) {
+                    value.waitTimeMillis() == currentMax.waitTimeMillis() && value.doLocationName().compareTo(currentMax.doLocationName()) < 0) {
                 currentMax = value;
             }
         }
