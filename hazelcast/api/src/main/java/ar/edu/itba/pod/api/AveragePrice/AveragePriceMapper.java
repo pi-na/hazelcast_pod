@@ -13,7 +13,6 @@ public class AveragePriceMapper
         String borough = value.getPickupBorough();
         String company = value.getCompany();
         Double fare = value.getBase_passenger_fare();
-        if (borough == null || company == null || fare == null) return;
         if ("Outside of NYC".equalsIgnoreCase(borough)) return;
 
         context.emit(

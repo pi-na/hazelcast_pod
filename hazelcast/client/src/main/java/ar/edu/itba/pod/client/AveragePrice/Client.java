@@ -56,9 +56,11 @@ public class Client extends QueryCLient<CompanyTrips> {
         Map<String, AveragePriceResult> result = future.get();
         logger.info(result.size() + " results found");
         SortedSet<AveragePriceResult> finalResult = new TreeSet<>(
-                Comparator.comparing(AveragePriceResult::getAvgFare).reversed()
-                        .thenComparing(AveragePriceResult::getPickUpBorough)
-                        .thenComparing(AveragePriceResult::getCompany));
+                Comparator.comparing(AveragePriceResult::getAvgFare, Comparator.reverseOrder())
+                        .thenComparing(AveragePriceResult::getPickUpBorough, Comparator.nullsLast(Comparator.naturalOrder()))
+                        .thenComparing(AveragePriceResult::getCompany, Comparator.nullsLast(Comparator.naturalOrder()))
+        );
+
         finalResult.addAll(result.values());
         ResultCsvWriter.writeCsv(params.getOutPath(), QUERY3_CSV, QUERY3_HEADERS, finalResult);
     }
@@ -74,6 +76,11 @@ public class Client extends QueryCLient<CompanyTrips> {
                 .skip(1)
                 .map(String::trim)
                 .map(line -> line.split(DIVIDER, -1))
+                .filter(cols -> {
+                    int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+                    int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+                    return zones.containsKey(pu) && zones.containsKey(doL);
+                })
                 .filter(cols -> {
                     int pu;
                     try {

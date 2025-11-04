@@ -6,30 +6,27 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AveragePriceCollator
-        implements Collator<Map.Entry<AverageKeyOut, AveragePriceAccumulator>, Map<String, AveragePriceResult>>, Serializable {
+public class AveragePriceCollator implements Collator<
+        Map.Entry<AverageKeyOut, AveragePriceAccumulator>,
+        Map<String, AveragePriceResult>> {
 
     @Override
-    public Map<String, AveragePriceResult> collate(Iterable<Map.Entry<AverageKeyOut, AveragePriceAccumulator>> values) {
-        Map<String, AveragePriceResult> results = new HashMap<>();
+    public Map<String, AveragePriceResult> collate(
+            Iterable<Map.Entry<AverageKeyOut, AveragePriceAccumulator>> values) {
+        Map<String, AveragePriceResult> result = new HashMap<>();
 
-        for (Map.Entry<AverageKeyOut, AveragePriceAccumulator> entry : values) {
-            String companyKey = entry.getKey().getCompany();
-            String boroughKey = entry.getKey().getPickUpBorough();
-            AveragePriceAccumulator acc = entry.getValue();
+        for (Map.Entry<AverageKeyOut, AveragePriceAccumulator> e : values) {
+            AverageKeyOut key = e.getKey();
+            AveragePriceAccumulator acc = e.getValue();
+            if (key == null || acc == null) continue;
 
-            String key = companyKey + ";" + boroughKey;
-
-            double avgFare = 0d;
-            if (acc.getCount() > 0) {
-                avgFare = acc.getSum() / acc.getCount();
-                avgFare = Math.floor(avgFare * 100d) / 100d;
-            }
-
-            AveragePriceResult result = new AveragePriceResult(boroughKey, companyKey, avgFare);
-            results.put(key, result);
+            double avg = acc.getCount() == 0 ? 0 : acc.getSum() / acc.getCount();
+            result.put(key.getPickUpBorough()+ ";" + key.getCompany(),
+                    new AveragePriceResult(key.getPickUpBorough(), key.getCompany(), avg));
         }
-        System.out.println("results: " + results);
-        return results;
+
+        System.out.println("[Collator] Entradas procesadas: " + result.size());
+        return result;
     }
 }
+
