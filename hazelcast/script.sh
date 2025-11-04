@@ -74,7 +74,7 @@ sleep 10
 
 # Run client based on selection
 cd "$CLIENT_DIR"
-MYPATH="/Users/jperalb/Documents/ITBA/POD/hazelcast_pod"
+MYPATH="/Users/agostinasquillari/Documents/ITBA/4to_1C/POD/tp2/hazelcast_pod"
 ADDRESS="127.0.0.1:5701;127.0.0.1:5702"
 
 if [ "$QUERY_CHOICE" == "1" ]; then
