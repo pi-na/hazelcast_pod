@@ -18,7 +18,7 @@ public class LongestWaitMapperValueIn extends Trip {
 
     public long waitMillis() {
        LocalDateTime requestTime = LocalDateTime.parse(getRequest_datetime().trim(), FORMATTER);
-       LocalDateTime pickUpTime = LocalDateTime.parse(pickUpDa().trim(), FORMATTER);
+       LocalDateTime pickUpTime = LocalDateTime.parse(getPickup_datetime().trim(), FORMATTER);
          return java.time.Duration.between(requestTime, pickUpTime).toMillis();
     }
 
