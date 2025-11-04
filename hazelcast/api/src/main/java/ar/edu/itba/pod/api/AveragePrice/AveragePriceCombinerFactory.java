@@ -1,6 +1,5 @@
 package ar.edu.itba.pod.api.AveragePrice;
 
-import ar.edu.itba.pod.api.totalTrips.TotalKeyOut;
 import com.hazelcast.mapreduce.Combiner;
 import com.hazelcast.mapreduce.CombinerFactory;
 

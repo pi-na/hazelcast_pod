@@ -5,7 +5,6 @@ import ar.edu.itba.pod.api.common.PairFiles;
 import ar.edu.itba.pod.api.common.Trip;
 import ar.edu.itba.pod.api.common.Zone;
 import ar.edu.itba.pod.api.enums.TripsColumns;
-import ar.edu.itba.pod.api.totalTrips.*;
 import ar.edu.itba.pod.client.QueryCLient;
 import ar.edu.itba.pod.client.params.DefaultParams;
 import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
@@ -27,13 +26,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 
-public class Client extends QueryCLient {
+public class Client extends QueryCLient<CompanyTrips> {
 
     private static final String QUERY3_CSV = "query3.csv";
     private static final String QUERY3_HEADERS = "pickUpBorough;company;avgFare";
     private static final String DIVIDER = ";";
 
-    private static final Logger logger = LoggerFactory.getLogger(ar.edu.itba.pod.client.totalTrips.Client.class);
+    private static final Logger logger = LoggerFactory.getLogger(ar.edu.itba.pod.client.AveragePrice.Client.class);
 
     public Client() throws IOException, ExecutionException, InterruptedException {super();}
 
@@ -42,11 +41,11 @@ public class Client extends QueryCLient {
     }
 
     @Override
-    public void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
-        KeyValueSource<Long, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
+    public void finishQuery(IMap<Long, CompanyTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
+        KeyValueSource<Long, CompanyTrips> keyValueSource = KeyValueSource.fromMap(iMap);
 
         JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
-        Job<Long, TotalTrips> job = jobTracker.newJob(keyValueSource);
+        Job<Long, CompanyTrips> job = jobTracker.newJob(keyValueSource);
 
         ICompletableFuture<Map<String, AveragePriceResult>> future = job
                 .mapper(new AveragePriceMapper())

@@ -18,7 +18,7 @@ public class AveragePriceReducerFactory
         private long count;
 
         @Override
-        public void beginReduce() { sum = 0d; count = 0L; }
+        public void beginReduce() { sum = 0.0; count = 0L; }
 
         @Override
         public void reduce(AveragePriceAccumulator value) {
