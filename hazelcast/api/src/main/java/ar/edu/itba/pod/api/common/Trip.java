@@ -16,7 +16,7 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
     private String dropoff_datetime;
     private Integer PULocation;
     private Integer DOLocation;
-    private String  pickup_location;
+    private String pickup_location;
     private String dropoff_location;
     private Double trip_miles;
     private Double base_passenger_fare;
@@ -96,6 +96,10 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
 
     public String getRequest_datetime() {
         return request_datetime;
+    }
+
+    public String getPickup_datetime() {
+        return pickup_datetime;
     }
 
     public Double getTrip_miles() {
