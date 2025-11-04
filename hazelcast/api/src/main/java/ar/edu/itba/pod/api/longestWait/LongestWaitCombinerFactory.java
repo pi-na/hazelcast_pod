@@ -2,9 +2,9 @@ package ar.edu.itba.pod.api.longestWait;
 
 import com.hazelcast.mapreduce.CombinerFactory;
 
-public class LongestWaitCombinerFactory implements CombinerFactory<Long, LongestWaitReducerValue, LongestWaitReducerValue> {
+public class LongestWaitCombinerFactory implements CombinerFactory<Integer, LongestWaitReducerValue, LongestWaitReducerValue> {
     @Override
-    public com.hazelcast.mapreduce.Combiner<LongestWaitReducerValue, LongestWaitReducerValue> newCombiner(Long key) {
+    public com.hazelcast.mapreduce.Combiner<LongestWaitReducerValue, LongestWaitReducerValue> newCombiner(Integer key) {
         return new LongestWaitCombiner();
     }
 

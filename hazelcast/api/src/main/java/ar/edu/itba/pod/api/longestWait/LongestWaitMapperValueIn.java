@@ -22,6 +22,11 @@ public class LongestWaitMapperValueIn extends Trip {
          return java.time.Duration.between(requestTime, pickUpTime).toMillis();
     }
 
-    public String zoneName() {
+    public String puZoneName() {
+        return getPickUpZone();
+        }
+
+    public String doZoneName() {
+        return getDropoffZone();
     }
 }

@@ -10,14 +10,16 @@ public class LongestWaitReducerValue implements DataSerializable {
     private long doLocationID;
     private long waitTimeMillis;
     private String doLocationName;
+    private String puLocationName;
 
     // Constructor vacío obligatorio para Hazelcast
     public LongestWaitReducerValue() {}
 
-    public LongestWaitReducerValue(long doLocationID, long waitTimeMillis, String doLocationName) {
+    public LongestWaitReducerValue(long doLocationID, long waitTimeMillis, String doLocationName, String puLocationName) {
         this.doLocationID = doLocationID;
         this.waitTimeMillis = waitTimeMillis;
         this.doLocationName = doLocationName;
+        this.puLocationName = puLocationName;
     }
 
     public long doLocationID() {
@@ -32,11 +34,16 @@ public class LongestWaitReducerValue implements DataSerializable {
         return doLocationName;
     }
 
+    public String puLocationName() {
+        return puLocationName;
+    }
+
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
         out.writeLong(doLocationID);
         out.writeLong(waitTimeMillis);
         out.writeUTF(doLocationName);
+        out.writeUTF(puLocationName);
     }
 
     @Override
@@ -44,5 +51,6 @@ public class LongestWaitReducerValue implements DataSerializable {
         doLocationID = in.readLong();
         waitTimeMillis = in.readLong();
         doLocationName = in.readUTF();
+        puLocationName = in.readUTF();
     }
 }
