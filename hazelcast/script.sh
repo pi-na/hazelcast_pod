@@ -44,11 +44,12 @@ echo ""
 echo "Which query do you want to run?"
 echo "1) Query 1 - Total trips by pickup and dropoff zone"
 echo "2) Query 2 - Longest trip within NYC by pickup zone"
+echo "3) Query 3 - Average fare by borough and company"
 echo "5) Query 5 - Total YTD miles by company"
-read -p "Enter your choice (1, 2, or 5): " QUERY_CHOICE
+read -p "Enter your choice (1, 2, 3, or 5): " QUERY_CHOICE
 
-if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" && "$QUERY_CHOICE" != "5" ]]; then
-  echo "❌ Invalid choice. Please run the script again and select 1, 2, or 5."
+if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" && "$QUERY_CHOICE" != "3" && "$QUERY_CHOICE" != "5" ]]; then
+  echo "❌ Invalid choice. Please run the script again and select 1, 2, 3, or 5."
   exit 1
 fi
 
@@ -73,7 +74,7 @@ sleep 10
 
 # Run client based on selection
 cd "$CLIENT_DIR"
-MYPATH="/Users/jperalb/Documents/ITBA/POD/hazelcast_pod"
+MYPATH="/Users/agostinasquillari/Documents/ITBA/4to_1C/POD/tp2/hazelcast_pod"
 ADDRESS="127.0.0.1:5701;127.0.0.1:5702"
 
 if [ "$QUERY_CHOICE" == "1" ]; then
@@ -88,6 +89,12 @@ elif [ "$QUERY_CHOICE" == "2" ]; then
   echo "✅ Query 2 finished!"
   echo "📄 Results written to: $MYPATH/query2.csv"
   echo "⏱️  Time log written to: $MYPATH/time2.txt"
+elif [ "$QUERY_CHOICE" == "3" ]; then
+  echo "💻 Running Query 3..."
+  ./query3.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
+  echo "✅ Query 3 finished!"
+  echo "📄 Results written to: $MYPATH/query3.csv"
+  echo "⏱️  Time log written to: $MYPATH/time3.txt"
 else
   echo "💻 Running Query 5..."
   ./query5.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH

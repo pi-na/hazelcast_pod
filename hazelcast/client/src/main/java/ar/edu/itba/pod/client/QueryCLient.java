@@ -76,7 +76,7 @@ public abstract class QueryCLient<T> {
 
     public abstract void finishQuery(IMap<Long, T> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
 
-    public static Trip parseTrip(String[] cols, Map<Integer, Zone> zones){
+    public static Trip parseTrip(String[] cols, Map<Integer, Zone> zones) {
         Trip trip = new Trip();
         trip.setCompany(cols[TripsColumns.COMPANY.getIndex()]);
         trip.setRequest_datetime(cols[TripsColumns.REQUEST_DATETIME.getIndex()]);
@@ -95,6 +95,7 @@ public abstract class QueryCLient<T> {
         Zone doZone = zones.get(doCode);
         if (puZone != null) {
             trip.setPickup_location(puZone.getZoneName());
+            trip.setPickup_borough(puZone.getBorough());   // 👈 ← ESTA LÍNEA ES CLAVE
         }
         if (doZone != null) {
             trip.setDropoff_location(doZone.getZoneName());
@@ -102,7 +103,6 @@ public abstract class QueryCLient<T> {
 
         return trip;
     }
-
     public abstract Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException;
 
     private Stream<Trip> parseRows(PairFiles files, Map<Integer, Zone> zones) throws IOException {
