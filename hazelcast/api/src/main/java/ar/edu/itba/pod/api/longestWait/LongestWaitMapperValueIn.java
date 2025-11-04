@@ -1,33 +1,27 @@
 package ar.edu.itba.pod.api.longestWait;
 
-import java.io.Serializable;
+import ar.edu.itba.pod.api.common.Trip;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public record LongestWaitMapperValueIn(LocalDateTime requestDatetime,
-                                       LocalDateTime pickupDatetime,
-                                       Long puLocationId,
-                                       Long doLocationId,
-                                       String zoneName) implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class LongestWaitMapperValueIn extends Trip {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // TODO Lo arme para q reciba todas strings esta bien? Lo voy a usar asi desde el client??
-    public LongestWaitMapperValueIn(String requestDatetimeStr, String pickupDatetimeStr,
-                                    String puLocationIdStr, String doLocationIdStr, String zoneName) {
-        this(
-                LocalDateTime.parse(requestDatetimeStr.trim(), FORMATTER),
-                LocalDateTime.parse(pickupDatetimeStr.trim(), FORMATTER),
-                Long.parseLong(puLocationIdStr.trim()),
-                Long.parseLong(doLocationIdStr.trim()),
-                zoneName
-        );
+    public Integer puLocationId() {
+        return getPULocation();
     }
 
-    /** Devuelve la espera en milisegundos */
+    public Integer doLocationId() {
+        return getDOLocation();
+    }
+
     public long waitMillis() {
-        return java.time.Duration.between(requestDatetime, pickupDatetime).toMillis();
+       LocalDateTime requestTime = LocalDateTime.parse(getRequest_datetime().trim(), FORMATTER);
+       LocalDateTime pickUpTime = LocalDateTime.parse(pickUpDa().trim(), FORMATTER);
+         return java.time.Duration.between(requestTime, pickUpTime).toMillis();
+    }
+
+    public String zoneName() {
     }
 }
-
