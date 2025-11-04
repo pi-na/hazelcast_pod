@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class QueryCLient {
+public abstract class QueryCLient<T> {
 
     private static final String CSV_EXTENSION = ".csv";
     private static final String DIVIDER = ";";
@@ -35,7 +35,7 @@ public abstract class QueryCLient {
                 Params.INPATH.getParam(),  Params.OUTPATH.getParam());
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-            IMap<Long, TotalTrips> iMap = hazelcastInstance.getMap("g5");
+            IMap<Long, T> iMap = hazelcastInstance.getMap("g5");
             run(params, iMap);
             finishQuery(iMap, hazelcastInstance, params);
         }finally {
@@ -74,7 +74,7 @@ public abstract class QueryCLient {
         return new PairFiles(tripsFile, zonesFile);
     }
 
-    public abstract void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
+    public abstract void finishQuery(IMap<Long, T> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException;
 
     public static Trip parseTrip(String[] cols, Map<Integer, Zone> zones){
         Trip trip = new Trip();
