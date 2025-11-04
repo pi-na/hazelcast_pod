@@ -71,6 +71,7 @@ public class Client extends QueryCLient<CompanyTrips> {
         final String OUTSIDE = "Outside of NYC";
 
         Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
+        System.out.println("Zones loaded: " + zones.size());
 
         Stream <Trip> tripStream = lines
                 .skip(1)
@@ -82,12 +83,7 @@ public class Client extends QueryCLient<CompanyTrips> {
                     return zones.containsKey(pu) && zones.containsKey(doL);
                 })
                 .filter(cols -> {
-                    int pu;
-                    try {
-                        pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
-                    } catch (Exception e) {
-                        return false;
-                    }
+                    int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
                     Zone z = zones.get(pu);
                     if (z == null) return false;
                     return !(OUTSIDE.equalsIgnoreCase(z.getZoneName()) || OUTSIDE.equalsIgnoreCase(z.getBorough()));
