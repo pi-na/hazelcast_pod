@@ -77,6 +77,7 @@ public class CsvDataLoader {
         Zone doZone = zones.get(doCode);
         if (puZone != null) {
             trip.setPickup_location(puZone.getZoneName());
+            trip.setPickup_borough(puZone.getBorough());
         }
         if (doZone != null) {
             trip.setDropoff_location(doZone.getZoneName());
