@@ -8,7 +8,6 @@ import ar.edu.itba.pod.api.enums.TripsColumns;
 import ar.edu.itba.pod.api.totalTrips.*;
 import ar.edu.itba.pod.client.QueryCLient;
 import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.CsvDataLoader;
 import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
 import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
 import com.hazelcast.client.HazelcastClient;
