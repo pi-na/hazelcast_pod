@@ -7,7 +7,10 @@ import com.hazelcast.mapreduce.Mapper;
 public class LongestWaitMapper implements Mapper<Long, LongestWaitMapperValueIn, Integer, LongestWaitReducerValue> {
     @Override
     public void map(Long keyIn, LongestWaitMapperValueIn longestWaitMapperValueIn, Context<Integer, LongestWaitReducerValue> context) {
-        context.emit(longestWaitMapperValueIn.puLocationId(),
-                new LongestWaitReducerValue(longestWaitMapperValueIn.doLocationId(), longestWaitMapperValueIn.waitMillis(), longestWaitMapperValueIn.doZoneName(), longestWaitMapperValueIn.puZoneName()));
+        context.emit(longestWaitMapperValueIn.getPULocation(),
+                new LongestWaitReducerValue(longestWaitMapperValueIn.getDOLocation(),
+                        longestWaitMapperValueIn.waitMillis(longestWaitMapperValueIn.getRequest_datetime(), longestWaitMapperValueIn.getPickup_datetime()),
+                        longestWaitMapperValueIn.getDropoffZone(),
+                        longestWaitMapperValueIn.getPickUpZone()));
     }
 }
