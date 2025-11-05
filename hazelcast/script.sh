@@ -126,19 +126,14 @@ echo "🚀 Starting Hazelcast cluster and running Query $QUERY_CHOICE..."
 
 SERVER_DIR="server/target/$(ls server/target | grep tpe2-g5-server- | head -n 1)"
 CLIENT_DIR="client/target/$(ls client/target | grep tpe2-g5-client- | head -n 1)"
-ADDRESS="127.0.0.1:5701;127.0.0.1:5702"
+ADDRESS="127.0.0.1:5701"
 
 # Launch servers
 echo "🟢 Launching Node 1..."
 osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/$SERVER_DIR && ./run-server.sh\""
 
-sleep 2
-
-echo "🟢 Launching Node 2..."
-osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/$SERVER_DIR && ./run-server.sh\""
-
 echo "⏳ Waiting for cluster to initialize..."
-sleep 10
+sleep 5
 
 # Run selected query
 cd "$CLIENT_DIR"

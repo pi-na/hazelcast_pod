@@ -67,7 +67,6 @@ public class Client extends QueryCLient<YtdMilesTrip> {
                 .map(String::trim)
                 .filter(line -> !line.isEmpty())
                 .map(line -> line.split(DIVIDER))
-                .filter(cols -> cols.length >= 8)
                 // Query 5 doesn't need zone filtering
                 .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
