@@ -37,7 +37,7 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public Client() throws IOException, ExecutionException, InterruptedException {
-        super();
+        super(4);
     }
 
     // <borough, List<locationId>>
