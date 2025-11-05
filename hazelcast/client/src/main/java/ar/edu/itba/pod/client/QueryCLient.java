@@ -8,6 +8,7 @@ import ar.edu.itba.pod.api.enums.TripsColumns;
 import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import ar.edu.itba.pod.client.params.DefaultParams;
 import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
+import ar.edu.itba.pod.client.utilities.TimeLogger;
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IMap;
@@ -29,15 +30,22 @@ public abstract class QueryCLient<T> {
     private static final String DIVIDER = ";";
     private static final String TRIPS_IDENTIFIER = "trips";
     private static final String ZONES_IDENTIFIER = "zones";
+    private static TimeLogger timeLogger = null;
 
-    public QueryCLient() throws IOException, ExecutionException, InterruptedException {
+    public QueryCLient(int queryNumber) throws IOException, ExecutionException, InterruptedException {
         DefaultParams params = DefaultParams.getParams(Params.ADDRESSES.getParam(),
                 Params.INPATH.getParam(),  Params.OUTPATH.getParam());
+        String timeFile = params.getOutPath() + "/time" + queryNumber + ".txt";
+        timeLogger = new TimeLogger(timeFile);
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, T> iMap = hazelcastInstance.getMap("g5");
+            timeLogger.log("Inicio de la lectura del archivo", 42);
             run(params, iMap);
+            timeLogger.log("Fin de la lectura del archivo", 44);
+            timeLogger.log("Inicio del trabajo map/reduce", 45);
             finishQuery(iMap, hazelcastInstance, params);
+            timeLogger.log("Fin del trabajo map/reduce", 46);
         }finally {
             HazelcastClient.shutdownAll();
         }
