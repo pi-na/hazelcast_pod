@@ -26,16 +26,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
+import static ar.edu.itba.pod.api.enums.Params.BOROUGH;
 
 public class Client extends QueryCLient<LongestWaitMapperValueIn> {
     private static final String QUERY4_CSV = "query4.csv";
     private static final String QUERY4_CSV_HEADERS = "puZoneName;doZoneName;waitTimeMillis;puLocationID;doLocationID";
     private static final String DIVIDER = ";";
     private static Map<Integer, Zone> zones = null;
-
+    private String borough;
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
-    public Client() throws IOException, ExecutionException, InterruptedException {super();}
+    public Client() throws IOException, ExecutionException, InterruptedException {
+        super();
+    }
 
     // <borough, List<locationId>>
     private Map<String, List<Long>> getLocationsByBorough(Map<Integer, Zone> zones) {
@@ -56,13 +59,23 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
         if (locationsInBorough == null) {
             return false;
         }
+        logger.info("Location/borough match OK: " + locationId + " in " + borough);
         return locationsInBorough.contains((long) locationId);
     }
 
     @Override
     public Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException {
+        this.borough = System.getProperty(BOROUGH.getParam());
         Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
         Map<String, List<Long>> locationsByBorough = getLocationsByBorough(zones);
+
+        logger.info("Parsing trips iMap; filtering by borough: '" + this.borough + "'");
+        logger.info("Locations by Borough map built for filtering:" + locationsByBorough.values());
+
+        if (!locationsByBorough.containsKey(this.borough)) {
+            logger.warn("No zones found for borough: '" + this.borough + "'. No trips will be processed.");
+            return Stream.empty();
+        }
 
         Stream<Trip> tripStream= lines
                 .skip(1)
@@ -71,7 +84,9 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
                 // Query4 requiere que solo se traten zonas que coinciden con la Borough dada
                 .filter(cols -> {
                     int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
-                    return locationIsInBorough(pu, borough, locationsByBorough);
+                    // TODO: Le tuve que pasar this.borough porque el parámetro borough de la función es nulo al llamarla desde finishQuery
+                    // TODO: ELIMINAR TODO LO DE BOROUGH DE QUERY CLIENT GENERICA
+                    return locationsByBorough.get(this.borough).contains((long) pu);
                 })
                 .map(pair -> parseTrip(pair, zones));
         return tripStream.onClose(lines::close);
