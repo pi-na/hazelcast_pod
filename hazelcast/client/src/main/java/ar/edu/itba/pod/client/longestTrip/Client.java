@@ -31,11 +31,12 @@ public class Client extends QueryCLient<LongestTrip> {
     private static final String QUERY2_CSV_HEADERS = "pickUpZone;longestDOZone;longestReqDateTime;longestMiles;longestCompany";
     private static final String DIVIDER = ";";
     private static final int OUTSIDE_NYC_LOCATION_ID = 265;
+    private static final int QUERY_NUMBER = 2;
 
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
 
     public Client() throws IOException, ExecutionException, InterruptedException {
-        super();
+        super(QUERY_NUMBER);
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {

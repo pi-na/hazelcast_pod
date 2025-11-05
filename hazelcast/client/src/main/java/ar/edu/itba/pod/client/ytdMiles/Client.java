@@ -29,11 +29,10 @@ public class Client extends QueryCLient<YtdMilesTrip> {
     private static final String QUERY5_CSV = "query5.csv";
     private static final String QUERY5_CSV_HEADERS = "company;year;month;milesYTD";
     private static final String DIVIDER = ";";
-
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private static final int QUERY_NUMBER = 5;
 
     public Client() throws IOException, ExecutionException, InterruptedException {
-        super();
+        super(QUERY_NUMBER);
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
