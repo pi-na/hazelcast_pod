@@ -30,7 +30,7 @@ import static ar.edu.itba.pod.api.enums.Params.BOROUGH;
 
 public class Client extends QueryCLient<LongestWaitMapperValueIn> {
     private static final String QUERY4_CSV = "query4.csv";
-    private static final String QUERY4_CSV_HEADERS = "puZoneName;doZoneName;waitTimeMillis;puLocationID;doLocationID";
+    private static final String QUERY4_CSV_HEADERS = "pickUpZone;dropOffZone;delayInSeconds";
     private static final String DIVIDER = ";";
     private static Map<Integer, Zone> zones = null;
     private String borough;
@@ -59,7 +59,6 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
         if (locationsInBorough == null) {
             return false;
         }
-        logger.info("Location/borough match OK: " + locationId + " in " + borough);
         return locationsInBorough.contains((long) locationId);
     }
 
@@ -68,9 +67,6 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
         this.borough = System.getProperty(BOROUGH.getParam());
         Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
         Map<String, List<Long>> locationsByBorough = getLocationsByBorough(zones);
-
-        logger.info("Parsing trips iMap; filtering by borough: '" + this.borough + "'");
-        logger.info("Locations by Borough map built for filtering:" + locationsByBorough.values());
 
         if (!locationsByBorough.containsKey(this.borough)) {
             logger.warn("No zones found for borough: '" + this.borough + "'. No trips will be processed.");
@@ -84,8 +80,6 @@ public class Client extends QueryCLient<LongestWaitMapperValueIn> {
                 // Query4 requiere que solo se traten zonas que coinciden con la Borough dada
                 .filter(cols -> {
                     int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
-                    // TODO: Le tuve que pasar this.borough porque el parámetro borough de la función es nulo al llamarla desde finishQuery
-                    // TODO: ELIMINAR TODO LO DE BOROUGH DE QUERY CLIENT GENERICA
                     return locationsByBorough.get(this.borough).contains((long) pu);
                 })
                 .map(pair -> parseTrip(pair, zones));

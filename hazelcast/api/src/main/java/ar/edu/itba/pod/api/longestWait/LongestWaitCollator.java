@@ -13,18 +13,16 @@ public class LongestWaitCollator implements Collator<Map.Entry<Integer, LongestW
 
         for (Map.Entry<Integer, LongestWaitReducerValue> entry : values) {
             LongestWaitReducerValue v = entry.getValue();
+
             resultRows.add(new LongestWaitResultRow(
                     v.puLocationName(),
                     v.doLocationName(),
-                    v.waitTimeMillis(),
-                    entry.getKey(),
-                    v.doLocationID()
+                    v.waitTimeMillis() / 1000      // Convertimos a segundos
             ));
         }
 
-        // Ordenamos por nombre de la zona de pickup (alfabéticamente ascendente)
         return resultRows.stream()
-                .sorted(Comparator.comparing(LongestWaitResultRow::getPuZoneName, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(LongestWaitResultRow::getPickUpZone, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }
 }
