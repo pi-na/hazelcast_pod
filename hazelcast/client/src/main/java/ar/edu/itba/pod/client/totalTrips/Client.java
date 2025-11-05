@@ -8,18 +8,13 @@ import ar.edu.itba.pod.api.enums.TripsColumns;
 import ar.edu.itba.pod.api.totalTrips.*;
 import ar.edu.itba.pod.client.QueryCLient;
 import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.CsvDataLoader;
-import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
 import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
-import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
 import com.hazelcast.mapreduce.Job;
 import com.hazelcast.mapreduce.JobTracker;
 import com.hazelcast.mapreduce.KeyValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,10 +29,9 @@ public class Client extends QueryCLient<TotalTrips> {
     private static final String QUERY1_CSV = "query1.csv";
     private static final String QUERY1_CSV_HEADERS = "pickUpZone;dropOffZone;trips";
     private static final String DIVIDER = ";";
+    private static final int QUERY_NUMBER = 1;
 
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
-
-    public Client() throws IOException, ExecutionException, InterruptedException {super();}
+    public Client() throws IOException, ExecutionException, InterruptedException {super(QUERY_NUMBER);}
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException{
         QueryCLient<TotalTrips> queryCLient = new Client();

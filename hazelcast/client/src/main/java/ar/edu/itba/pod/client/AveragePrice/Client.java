@@ -31,10 +31,11 @@ public class Client extends QueryCLient<CompanyTrips> {
     private static final String QUERY3_CSV = "query3.csv";
     private static final String QUERY3_HEADERS = "pickUpBorough;company;avgFare";
     private static final String DIVIDER = ";";
+    private static final int QUERY_NUMBER = 3;
 
     private static final Logger logger = LoggerFactory.getLogger(ar.edu.itba.pod.client.AveragePrice.Client.class);
 
-    public Client() throws IOException, ExecutionException, InterruptedException {super();}
+    public Client() throws IOException, ExecutionException, InterruptedException {super(QUERY_NUMBER);}
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException{
         QueryCLient queryCLient = new Client();
