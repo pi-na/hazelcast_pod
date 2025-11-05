@@ -105,25 +105,24 @@ done
 
 echo "🎉 All modules built and unpacked successfully!"
 
-# === Ask which query to run ===
+# Ask which query to run
 echo ""
 echo "Which query do you want to run?"
 echo "1) Query 1 - Total trips by pickup and dropoff zone"
 echo "2) Query 2 - Longest trip within NYC by pickup zone"
 echo "3) Query 3 - Average fare by borough and company"
+echo "4) Query 4 - Longest wait time by pickup zone"
 echo "5) Query 5 - Total YTD miles by company"
-echo -n "Enter your choice (1, 2, 3, or 5): "
+read -p "Enter your choice (1, 2, 3, 4, or 5): " QUERY_CHOICE
 
-read -n1 QUERY_CHOICE
-echo ""  # line break
-
-if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" && "$QUERY_CHOICE" != "3" && "$QUERY_CHOICE" != "5" ]]; then
-  echo "❌ Invalid choice. Please run the script again and select 1, 2, 3, or 5."
+if [[ "$QUERY_CHOICE" != "1" && "$QUERY_CHOICE" != "2" && "$QUERY_CHOICE" != "3" && "$QUERY_CHOICE" != "4" && "$QUERY_CHOICE" != "5" ]]; then
+  echo "❌ Invalid choice. Please run the script again and select 1, 2, 3, 4, or 5."
   exit 1
 fi
 
 echo "🚀 Starting Hazelcast cluster and running Query $QUERY_CHOICE..."
 
+# Paths to server and client
 SERVER_DIR="server/target/$(ls server/target | grep tpe2-g5-server- | head -n 1)"
 CLIENT_DIR="client/target/$(ls client/target | grep tpe2-g5-client- | head -n 1)"
 ADDRESS="127.0.0.1:5701"
@@ -135,8 +134,10 @@ osascript -e "tell application \"Terminal\" to do script \"cd $(pwd)/$SERVER_DIR
 echo "⏳ Waiting for cluster to initialize..."
 sleep 5
 
-# Run selected query
+# Run client based on selection
 cd "$CLIENT_DIR"
+MYPATH="/Users/agostinasquillari/Documents/ITBA/4to_1C/POD/tp2/hazelcast_pod"
+ADDRESS="127.0.0.1:5701;127.0.0.1:5702"
 
 if [ "$QUERY_CHOICE" == "1" ]; then
   echo "💻 Running Query 1..."
@@ -153,6 +154,12 @@ elif [ "$QUERY_CHOICE" == "3" ]; then
   ./query3.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH
   echo "📄 Results: $MYPATH/query3.csv"
   echo "⏱️  Time: $MYPATH/time3.txt"
+elif [ "$QUERY_CHOICE" == "4" ]; then
+  echo "💻 Running Query 4..."
+  read -p "Enter borough name (e.g., Manhattan, Brooklyn, Queens): " BOROUGH
+  ./query4.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH -Dborough="$BOROUGH"
+  echo "📄 Results written to: $MYPATH/query4.csv"
+  echo "⏱️  Time log written to: $MYPATH/time4.txt"
 else
   echo "💻 Running Query 5..."
   ./query5.sh -Daddresses=$ADDRESS -DinPath=$MYPATH -DoutPath=$MYPATH

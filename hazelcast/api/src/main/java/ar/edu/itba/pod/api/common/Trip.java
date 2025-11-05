@@ -2,6 +2,7 @@ package ar.edu.itba.pod.api.common;
 
 import ar.edu.itba.pod.api.AveragePrice.CompanyTrips;
 import ar.edu.itba.pod.api.longestTrip.LongestTrip;
+import ar.edu.itba.pod.api.longestWait.LongestWaitMapperValueIn;
 import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import ar.edu.itba.pod.api.ytdMiles.YtdMilesTrip;
 import com.hazelcast.nio.ObjectDataInput;
@@ -10,15 +11,15 @@ import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
 
-public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMilesTrip, CompanyTrips {
+public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMilesTrip, CompanyTrips, LongestWaitMapperValueIn {
     private String company;
     private String request_datetime;
     private String pickup_datetime;
     private String dropoff_datetime;
     private Integer PULocation;
     private Integer DOLocation;
-    private String  pickup_location;
     private String  pickup_borough;
+    private String  pickup_location;
     private String dropoff_location;
     private Double trip_miles;
     private Double base_passenger_fare;
@@ -118,6 +119,10 @@ public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMiles
 
     public String getRequest_datetime() {
         return request_datetime;
+    }
+
+    public String getPickup_datetime() {
+        return pickup_datetime;
     }
 
     public Double getTrip_miles() {
