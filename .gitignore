@@ -263,3 +263,4 @@ time*.txt
 
 zones.csv
 trips-2025-01.csv
+*/.env
