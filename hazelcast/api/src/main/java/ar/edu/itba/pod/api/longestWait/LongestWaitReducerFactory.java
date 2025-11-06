@@ -7,6 +7,8 @@ public class LongestWaitReducerFactory implements ReducerFactory<Integer, Longes
 
     // La key de este reducer es el pickUpLocationID
     // El valueIn y valueOut es (DROP OFF LOCATION ID, WAIT TIME IN MILLIS)
+    // Se necesita drop off location name para desempatar (consigna)
+    // tecnicamente no se necesita pickup location name, pero lo dejo para armar el resultado final mas facil
     // Voy a tener que averiguar cual es el max tiempo, y cual es la drop off con ese tiempo
     @Override
     public Reducer<LongestWaitReducerValue, LongestWaitReducerValue> newReducer(Integer puLocationId) {
