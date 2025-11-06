@@ -10,8 +10,8 @@ public class TotalTripsCollator implements Collator<Map.Entry<TotalKeyOut, Long>
         for (Map.Entry<TotalKeyOut, Long> e : entries) {
             TotalKeyOut k = e.getKey();
             map.put(k.getPickUpZone() + ";" + k.getDropOffZone(),
-                    new TotalTripsResult(Short.toString(k.getPickUpZone()),
-                            Short.toString(k.getDropOffZone()),
+                    new TotalTripsResult(k.getPickUpZone(),
+                            k.getDropOffZone(),
                             e.getValue()));
         }
         return map;

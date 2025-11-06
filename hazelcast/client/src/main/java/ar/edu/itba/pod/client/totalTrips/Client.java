@@ -1,12 +1,10 @@
 package ar.edu.itba.pod.client.totalTrips;
 
+import ar.edu.itba.pod.api.common.Zone;
 import ar.edu.itba.pod.api.enums.Params;
 import ar.edu.itba.pod.api.totalTrips.*;
 import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.CsvParser;
-import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
-import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
-import ar.edu.itba.pod.client.utilities.TimeLogger;
+import ar.edu.itba.pod.client.utilities.*;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
@@ -58,15 +56,34 @@ public class Client {
                 .submit(new TotalTripsCollator());
 
         Map<String, TotalTripsResult> result = future.get();
-
+        // TODO AJUSTAR LOGS PARA MATCHEAR CONSIGNA
         logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
-        SortedSet<TotalTripsResult> finalResult = new TreeSet<>(
-                Comparator.comparing(TotalTripsResult::total).reversed()
-                        .thenComparing(TotalTripsResult::pickUpZone)
-                        .thenComparing(TotalTripsResult::dropOffZone));
-        finalResult.addAll(result.values());
 
-        ResultCsvWriter.writeCsv(params.getOutPath(), QUERY1_CSV, QUERY1_CSV_HEADERS, finalResult);
+        Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
+
+        SortedSet<TotalTripOutput> finalOutput = new TreeSet<>(
+                Comparator.comparing(TotalTripOutput::total).reversed()
+                        .thenComparing(TotalTripOutput::pickUpZone)
+                        .thenComparing(TotalTripOutput::dropOffZone)
+        );
+
+        for (TotalTripsResult r : result.values()) {
+            String puName = zones.get(r.pickUpZone()).getZoneName();
+            String doName = zones.get(r.dropOffZone()).getZoneName();
+
+            finalOutput.add(new TotalTripOutput(
+                    puName,
+                    doName,
+                    r.total()
+            ));
+        }
+
+        ResultCsvWriter.writeCsv(
+                params.getOutPath(),
+                QUERY1_CSV,
+                QUERY1_CSV_HEADERS,
+                finalOutput
+        );
         logger.info("Se escribio el archivo");
 
         iMap.destroy();
