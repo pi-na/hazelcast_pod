@@ -49,22 +49,29 @@ public class Client {
             throw new IllegalArgumentException("Falta parámetro -D" + Params.BOROUGH.getParam() + " (ej: -Dborough=Manhattan)");
         }
 
+        long start = System.nanoTime();
         timeLogger.log("Inicio de la lectura del archivo", 53);
         CsvParser<LongestWaitTripData> csvParser =
                 new CsvParser<>(iMap, new LongestWaitParser(zones, borough));
         csvParser.processAndLoadCSV(params.getInPath());
         timeLogger.log("Fin de la lectura del archivo", 57);
 
+        long end = System.nanoTime();
+        System.out.println("Tiempo csv load: " + (end - start)/1_000_000 + " ms");
+
         KeyValueSource<Long, LongestWaitTripData> kvs = KeyValueSource.fromMap(iMap);
         JobTracker jobTracker = hz.getJobTracker("g5-longest-wait");
         Job<Long, LongestWaitTripData> job = jobTracker.newJob(kvs);
 
+        start = System.nanoTime();
         timeLogger.log("Inicio del trabajo map/reduce", 60);
         ICompletableFuture<List<LongestWaitResultRow>> future = job
                 .mapper(new LongestWaitMapper())
                 .combiner(new LongestWaitCombinerFactory())
                 .reducer(new LongestWaitReducerFactory())
                 .submit(new LongestWaitCollator());
+        end = System.nanoTime();
+        System.out.println("Tiempo MapReduce: " + (end - start)/1_000_000 + " ms");
 
         List<LongestWaitResultRow> rows = future.get();
         timeLogger.log("Fin el trabajo map/reduce", 87);

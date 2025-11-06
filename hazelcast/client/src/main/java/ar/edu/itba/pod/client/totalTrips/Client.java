@@ -39,10 +39,13 @@ public class Client {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, MinimalTrip> iMap = hazelcastInstance.getMap("g5");
 
+            long start = System.nanoTime();
             timeLogger.log("Inicio de la lectura del archivo", 82);
             CsvParser<MinimalTrip> csvParser = new CsvParser<>(iMap, new MinimalTripParser());
             csvParser.processAndLoadCSV(params.getInPath());
             timeLogger.log("Fin de la lectura del archivo", 84);
+            long end = System.nanoTime();
+            System.out.println("Tiempo csv load: " + (end - start)/1_000_000 + " ms");
 
             // TODO: POR QUE EL TIME LOGGER NECESITA EL LINE NUMBER??????????????
             timeLogger.log("Inicio del trabajo map/reduce", 85);
@@ -51,6 +54,7 @@ public class Client {
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
             Job<Long, MinimalTrip> job = jobTracker.newJob(keyValueSource);
 
+            start = System.nanoTime();
             ICompletableFuture<Map<String, TotalTripsResult>> future = job
                     .mapper(new TotalTripsMapper())
                     .combiner(new TotalTripsCombinerFactory())
@@ -58,6 +62,8 @@ public class Client {
                     .submit(new TotalTripsCollator());
 
             Map<String, TotalTripsResult> result = future.get();
+            end = System.nanoTime();
+            System.out.println("MapReduce time: " + (end - start)/1_000_000 + " ms");
             // TODO AJUSTAR LOGS PARA MATCHEAR CONSIGNA
             logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
 

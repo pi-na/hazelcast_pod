@@ -52,9 +52,11 @@ public class Client{
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, LongestTrip> iMap = hazelcastInstance.getMap("g5");
-
+            long start = System.nanoTime();
             timeLogger.log("Inicio de la lectura del archivo", 82);
             processAndLoadCSV(iMap);
+            long end = System.nanoTime();
+            System.out.println("Tiempo csv load: " + (end - start)/1_000_000 + " ms");
             timeLogger.log("Fin de la lectura del archivo", 84);
             timeLogger.log("Inicio del trabajo map/reduce", 85);
             finishQuery(iMap, hazelcastInstance, params);
@@ -71,7 +73,7 @@ public class Client{
 
         JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-longest-trip");
         Job<Long, LongestTrip> job = jobTracker.newJob(keyValueSource);
-
+        long start = System.nanoTime();
         ICompletableFuture<Map<String, LongestTripResult>> future = job
                 .mapper(new LongestTripMapper())
                 .combiner(new LongestTripCombinerFactory())
@@ -79,6 +81,8 @@ public class Client{
                 .submit(new LongestTripCollator());
 
         Map<String, LongestTripResult> result = future.get();
+        long end = System.nanoTime();
+        System.out.println("Tiempo mapReduce: " + (end - start)/1_000_000 + " ms");
         Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
         SortedSet<LongestTripOutput> finalResult = new TreeSet<>(

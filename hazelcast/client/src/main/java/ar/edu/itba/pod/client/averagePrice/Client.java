@@ -41,10 +41,13 @@ public class Client {
             IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5");
             Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
+            long start = System.nanoTime();
             timeLogger.log("Inicio de la lectura del archivo", 42);
             CsvParser<TripData> csvParser = new CsvParser<>(iMap, new AveragePriceParser(zones));
             csvParser.processAndLoadCSV(params.getInPath());
             timeLogger.log("Fin de la lectura del archivo", 45);
+            long end = System.nanoTime();
+            System.out.println("Tiempo csv load: " + (end - start)/1_000_000 + " ms");
 
             timeLogger.log("Inicio del trabajo map/reduce", 47);
 
@@ -52,12 +55,15 @@ public class Client {
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
             Job<Long, TripData> job = jobTracker.newJob(keyValueSource);
 
+            start = System.nanoTime();
             ICompletableFuture<Map<AverageKeyOut, Double>> future = job
                     .mapper(new AveragePriceMapper())
                     .reducer(new AveragePriceReducerFactory())
                     .submit();
 
             Map<AverageKeyOut, Double> result = future.get();
+            end = System.nanoTime();
+            System.out.println("MapReduce time" + (end - start)/1_000_000 + " ms");
 
             timeLogger.log("Inicio del trabajo map/reduce", 47);
 

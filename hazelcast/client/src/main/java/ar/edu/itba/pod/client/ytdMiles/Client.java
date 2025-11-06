@@ -36,18 +36,21 @@ public class Client {
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, YtdMilesTrip> iMap = hazelcastInstance.getMap("g5");
-
+            long start = System.nanoTime();
             timeLogger.log("Inicio de la lectura del archivo", 82);
             CsvParser<YtdMilesTrip> csvParser = new CsvParser<>(iMap, new YtdMilesTripParser());
             csvParser.processAndLoadCSV(params.getInPath());
             timeLogger.log("Fin de la lectura del archivo", 84);
 
+            long end = System.nanoTime();
+            System.out.println("Tiempo csv load: " + (end - start)/1_000_000 + " ms");
             timeLogger.log("Inicio del trabajo map/reduce", 85);
 
             KeyValueSource<Long, YtdMilesTrip> keyValueSource = KeyValueSource.fromMap(iMap);
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-ytd-miles");
             Job<Long, YtdMilesTrip> job = jobTracker.newJob(keyValueSource);
 
+            start = System.nanoTime();
             ICompletableFuture<List<YtdMilesResult>> future = job
                     .mapper(new YtdMilesMapper())
                     .combiner(new YtdMilesCombinerFactory())
@@ -55,6 +58,8 @@ public class Client {
                     .submit(new YtdMilesCollator());
 
             List<YtdMilesResult> result = future.get();
+            end = System.nanoTime();
+            System.out.println("MapReduce time: " + (end - start)/1_000_000 + " ms");
             ResultCsvWriter.writeCsv(params.getOutPath(), QUERY5_CSV, QUERY5_CSV_HEADERS, result);
         } finally {
             HazelcastClient.shutdownAll();
