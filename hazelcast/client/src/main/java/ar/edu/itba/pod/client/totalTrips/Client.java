@@ -62,6 +62,7 @@ public class Client extends QueryCLient<TotalTrips> {
         ResultCsvWriter.writeCsv(params.getOutPath(), QUERY1_CSV, QUERY1_CSV_HEADERS, finalResult);
     }
 
+    // NO retorna hasta que se cierra el stream!!!
     @Override
     public Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException {
         Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);

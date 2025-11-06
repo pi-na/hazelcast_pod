@@ -11,7 +11,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
 
-public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMilesTrip, CompanyTrips, LongestWaitMapperValueIn {
+public class Trip implements ParsedRow, DataSerializable, TotalTrips, LongestTrip, YtdMilesTrip, CompanyTrips, LongestWaitMapperValueIn {
     private String company;
     private String request_datetime;
     private String pickup_datetime;
