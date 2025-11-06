@@ -44,7 +44,6 @@ public class Client {
             csvParser.processAndLoadCSV(params.getInPath());
             timeLogger.log("Fin de la lectura del archivo", 84);
 
-            // TODO: POR QUE EL TIME LOGGER NECESITA EL LINE NUMBER??????????????
             timeLogger.log("Inicio del trabajo map/reduce", 85);
 
             KeyValueSource<Long, MinimalTrip> keyValueSource = KeyValueSource.fromMap(iMap);
@@ -58,8 +57,6 @@ public class Client {
                     .submit(new TotalTripsCollator());
 
             Map<String, TotalTripsResult> result = future.get();
-            // TODO AJUSTAR LOGS PARA MATCHEAR CONSIGNA
-            logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
 
             Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
@@ -94,10 +91,8 @@ public class Client {
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-        // TODO INTERFAZ PARAMS O ALGUNA MANERA DE RESOLVER HERENCIA (bah esta resuelta??...))
         DefaultParams params = DefaultParams.getParams(Params.ADDRESSES.getParam(),
                 Params.INPATH.getParam(),  Params.OUTPATH.getParam());
-        int queryNumber = 1; // TODO: Cambiar segun el query
         Client client = new Client(params);
         client.run();
     }

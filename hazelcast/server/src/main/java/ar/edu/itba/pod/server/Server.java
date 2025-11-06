@@ -30,7 +30,7 @@ public class Server {
 
         InterfacesConfig interfacesConfig = new InterfacesConfig()
                 //TODO: adaptarlo a pampero
-                .setInterfaces(Collections.singletonList("127.0.0.1")).setEnabled(true);
+                .setInterfaces(Collections.singletonList("127.0.0.*")).setEnabled(true);
 
         NetworkConfig networkConfig = new NetworkConfig().setInterfaces(interfacesConfig).setJoin(joinConfig);
 

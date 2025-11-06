@@ -28,12 +28,10 @@ public class CsvParser<V extends ParsedRow> {
         this.rowParser = rowParser;
     }
 
-    // implements o extends???
     public void processAndLoadCSV(String inPath) throws IOException {
         PairFiles csvsPath = getFilesPath(inPath);
         Map<Integer, Zone> zones = getZones(csvsPath.getzonesFiles());
 
-        // TODO: Probar batch sizes
         final int BATCH_SIZE = 1000;
         final AtomicLong keyCounter = new AtomicLong(0);
 
