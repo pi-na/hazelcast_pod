@@ -3,53 +3,52 @@ package ar.edu.itba.pod.api.totalTrips;
 import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
-
 import java.io.IOException;
 import java.util.Objects;
 
-public class TotalKeyOut implements DataSerializable {
-    
-    private String pickUpZone;
-    private String dropOffZone;
+// Ocupa 8 bytes en total (2 ints) más overhead mínimo de serialización.
+public class TotalKeyOut implements DataSerializable, Comparable<TotalKeyOut> {
+    // ASUMIMOS QUE LOS ZONAS SON ENTEROS MENORES a 32.767 (MAX VALUE DE SHORT)
+    private short pickUpZone;   // enteros menores a 1000 → cabe en short
+    private short dropOffZone;
 
-    public TotalKeyOut(String pickUpZone, String dropOffZone) {
+    public TotalKeyOut() {} // requerido por Hazelcast
+    public TotalKeyOut(short pickUpZone, short dropOffZone) {
         this.pickUpZone = pickUpZone;
         this.dropOffZone = dropOffZone;
     }
 
-    public TotalKeyOut() {
-        // Default constructor for deserialization
-    }
-
     @Override
     public void writeData(ObjectDataOutput out) throws IOException {
-        out.writeUTF(pickUpZone);
-        out.writeUTF(dropOffZone);
+        out.writeShort(pickUpZone);
+        out.writeShort(dropOffZone);
     }
 
     @Override
     public void readData(ObjectDataInput in) throws IOException {
-        pickUpZone = in.readUTF();
-        dropOffZone = in.readUTF();
+        pickUpZone = in.readShort();
+        dropOffZone = in.readShort();
     }
 
     @Override
-    public boolean equals(final Object obj) {
-        return obj instanceof TotalKeyOut TotalKeyOut &&
-                pickUpZone.equals(TotalKeyOut.pickUpZone) &&
-                dropOffZone.equals(TotalKeyOut.dropOffZone);
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof TotalKeyOut)) return false;
+        TotalKeyOut o = (TotalKeyOut) obj;
+        return pickUpZone == o.pickUpZone && dropOffZone == o.dropOffZone;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(pickUpZone, dropOffZone);
+        return (pickUpZone << 16) ^ dropOffZone;
     }
 
-    public String getpickUpZone() {
-        return pickUpZone;
+    @Override
+    public int compareTo(TotalKeyOut o) {
+        int cmp = Short.compare(pickUpZone, o.pickUpZone);
+        return (cmp != 0) ? cmp : Short.compare(dropOffZone, o.dropOffZone);
     }
 
-    public String getdropOffZone() {
-        return dropOffZone;
-    }
+    public short getPickUpZone() { return pickUpZone; }
+    public short getDropOffZone() { return dropOffZone; }
 }

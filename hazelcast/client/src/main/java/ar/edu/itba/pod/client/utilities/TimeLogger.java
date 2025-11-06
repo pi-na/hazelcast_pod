@@ -17,7 +17,7 @@ public class TimeLogger {
     public void log(String message, int lineNumber) {
         String timestamp = LocalDateTime.now().format(FORMATTER);
         String logLine = String.format(
-                "%s INFO  [main] Client (Client.java:%d) - %s%n",
+                "%s INFO  [main] Client (Client.j:%d) - %s%n",
                 timestamp, lineNumber, message
         );
         try {

@@ -1,0 +1,87 @@
+package ar.edu.itba.pod.client.totalTrips;
+
+import ar.edu.itba.pod.api.common.PairFiles;
+import ar.edu.itba.pod.api.common.Trip;
+import ar.edu.itba.pod.api.common.Zone;
+import ar.edu.itba.pod.api.enums.Params;
+import ar.edu.itba.pod.api.enums.TripsColumns;
+import ar.edu.itba.pod.api.totalTrips.*;
+import ar.edu.itba.pod.client.QueryCLient;
+import ar.edu.itba.pod.client.params.DefaultParams;
+import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
+import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
+import com.hazelcast.core.HazelcastInstance;
+import com.hazelcast.core.ICompletableFuture;
+import com.hazelcast.core.IMap;
+import com.hazelcast.mapreduce.Job;
+import com.hazelcast.mapreduce.JobTracker;
+import com.hazelcast.mapreduce.KeyValueSource;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
+
+public class Client extends QueryCLient<TotalTrips> {
+
+    private static final String QUERY1_CSV = "query1.csv";
+    private static final String QUERY1_CSV_HEADERS = "pickUpZone;dropOffZone;trips";
+    private static final String DIVIDER = ";";
+    private static final int QUERY_NUMBER = 1;
+
+    public Client() throws IOException, ExecutionException, InterruptedException {super(QUERY_NUMBER);}
+
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException{
+        QueryCLient<TotalTrips> queryCLient = new Client();
+    }
+
+    @Override
+    public void finishQuery(IMap<Long, TotalTrips> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) throws IOException, ExecutionException, InterruptedException {
+        KeyValueSource<Long, TotalTrips> keyValueSource = KeyValueSource.fromMap(iMap);
+
+        JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
+        Job<Long, TotalTrips> job = jobTracker.newJob(keyValueSource);
+
+        ICompletableFuture<Map<String, TotalTripsResult>> future = job
+                .mapper(new TotalTripsMapper())
+                .combiner(new TotalTripsCombinerFactory())
+                .reducer(new TotalTripsReducerFactory())
+                .submit(new TotalTripsCollator());
+
+
+        Map<String, TotalTripsResult> result = future.get();
+        SortedSet<TotalTripsResult> finalResult = new TreeSet<>(
+                Comparator.comparing(TotalTripsResult::total).reversed()
+                        .thenComparing(TotalTripsResult::pickUpZone)
+                        .thenComparing(TotalTripsResult::dropOffZone));
+        finalResult.addAll(result.values());
+
+        ResultCsvWriter.writeCsv(params.getOutPath(), QUERY1_CSV, QUERY1_CSV_HEADERS, finalResult);
+    }
+
+    // NO retorna hasta que se cierra el stream!!!
+    @Override
+    public Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException {
+        Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
+        Stream<Trip> tripStream= lines
+                .skip(1)
+                .map(String::trim)
+                .map(line -> line.split(DIVIDER))
+                //QUERY1 pide que solo se consideren los que salen y llegan a zonas difrentes
+                .filter(cols -> {
+                    int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+                    int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+                    return pu != doL;
+                })
+                .filter(cols -> {
+                    int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
+                    int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
+                    return zones.containsKey(pu) && zones.containsKey(doL);
+                })
+                .map(pair -> parseTrip(pair, zones));
+        return tripStream.onClose(lines::close);
+    }
+}
