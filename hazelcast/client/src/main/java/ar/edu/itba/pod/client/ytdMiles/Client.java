@@ -1,12 +1,10 @@
 package ar.edu.itba.pod.client.ytdMiles;
 
-import ar.edu.itba.pod.api.common.PairFiles;
-import ar.edu.itba.pod.api.common.Trip;
-import ar.edu.itba.pod.api.common.Zone;
+import ar.edu.itba.pod.api.enums.Params;
 import ar.edu.itba.pod.api.ytdMiles.*;
-import ar.edu.itba.pod.client.QueryCLient;
 import ar.edu.itba.pod.client.params.DefaultParams;
-import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
+import ar.edu.itba.pod.client.utilities.*;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
@@ -17,58 +15,57 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 
-public class Client extends QueryCLient<YtdMilesTrip> {
-
+public class Client {
     private static final String QUERY5_CSV = "query5.csv";
     private static final String QUERY5_CSV_HEADERS = "company;year;month;milesYTD";
-    private static final String DIVIDER = ";";
     private static final int QUERY_NUMBER = 5;
+    private static TimeLogger timeLogger = null;
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private final DefaultParams params;
 
-    public Client() throws IOException, ExecutionException, InterruptedException {
-        super(QUERY_NUMBER);
+    public Client(DefaultParams params) {
+        String timeFile = params.getOutPath() + "/time" + QUERY_NUMBER + ".txt";
+        this.timeLogger = new TimeLogger(timeFile);
+        this.params = params;
+    }
+
+    public void run() throws IOException, ExecutionException, InterruptedException {
+        try {
+            HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
+            IMap<Long, YtdMilesTrip> iMap = hazelcastInstance.getMap("g5");
+
+            timeLogger.log("Inicio de la lectura del archivo", 82);
+            CsvParser<YtdMilesTrip> csvParser = new CsvParser<>(iMap, new YtdMilesTripParser());
+            csvParser.processAndLoadCSV(params.getInPath());
+            timeLogger.log("Fin de la lectura del archivo", 84);
+
+            timeLogger.log("Inicio del trabajo map/reduce", 85);
+
+            KeyValueSource<Long, YtdMilesTrip> keyValueSource = KeyValueSource.fromMap(iMap);
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-ytd-miles");
+            Job<Long, YtdMilesTrip> job = jobTracker.newJob(keyValueSource);
+
+            ICompletableFuture<List<YtdMilesResult>> future = job
+                    .mapper(new YtdMilesMapper())
+                    .combiner(new YtdMilesCombinerFactory())
+                    .reducer(new YtdMilesReducerFactory())
+                    .submit(new YtdMilesCollator());
+
+            List<YtdMilesResult> result = future.get();
+            ResultCsvWriter.writeCsv(params.getOutPath(), QUERY5_CSV, QUERY5_CSV_HEADERS, result);
+        } finally {
+            HazelcastClient.shutdownAll();
+        }
+
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-        QueryCLient<YtdMilesTrip> queryCLient = new Client();
-    }
-
-    @Override
-    public void finishQuery(IMap<Long, YtdMilesTrip> iMap, HazelcastInstance hazelcastInstance, DefaultParams params) 
-            throws IOException, ExecutionException, InterruptedException {
-        
-        KeyValueSource<Long, YtdMilesTrip> keyValueSource = KeyValueSource.fromMap(iMap);
-
-        JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-ytd-miles");
-        Job<Long, YtdMilesTrip> job = jobTracker.newJob(keyValueSource);
-
-        ICompletableFuture<List<YtdMilesResult>> future = job
-                .mapper(new YtdMilesMapper())
-                .combiner(new YtdMilesCombinerFactory())
-                .reducer(new YtdMilesReducerFactory())
-                .submit(new YtdMilesCollator());
-
-        List<YtdMilesResult> result = future.get();
-
-        ResultCsvWriter.writeCsv(params.getOutPath(), QUERY5_CSV, QUERY5_CSV_HEADERS, result);
-    }
-
-    @Override
-    public Stream<Trip> genericParseRows(PairFiles files, Map<Integer, Zone> zones, String borough) throws IOException {
-        Stream<String> lines = Files.lines(Paths.get(files.gettripsFile()), StandardCharsets.UTF_8);
-        Stream<Trip> tripStream = lines
-                .skip(1)
-                .map(String::trim)
-                .filter(line -> !line.isEmpty())
-                .map(line -> line.split(DIVIDER))
-                // Query 5 doesn't need zone filtering
-                .map(pair -> parseTrip(pair, zones));
-        return tripStream.onClose(lines::close);
+        DefaultParams params = DefaultParams.getParams(Params.ADDRESSES.getParam(),
+                Params.INPATH.getParam(), Params.OUTPATH.getParam());
+        Client client = new Client(params);
+        client.run();
     }
 }
