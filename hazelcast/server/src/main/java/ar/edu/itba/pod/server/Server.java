@@ -36,6 +36,18 @@ public class Server {
 
         config.setNetworkConfig(networkConfig);
 
+        // === Map configuration ===
+        MapConfig mapConfig = new MapConfig("g5");
+        mapConfig.setInMemoryFormat(InMemoryFormat.BINARY);     // clave! guarda binario y no objetos. lo deserializa solo al pedirlo.
+        mapConfig.setBackupCount(0);                            // sin replicas. Tenemos poca memoria!!!
+        mapConfig.setMaxSizeConfig(
+                new MaxSizeConfig()
+                        .setMaxSizePolicy(MaxSizeConfig.MaxSizePolicy.PER_NODE)
+        );
+//        mapConfig.setEvictionPolicy(EvictionPolicy.NONE);     // por default, elimina entradas si se queda sin heap.
+//         mapConfig.setMaxSizeConfig(new MaxSizeConfig(85, MaxSizeConfig.MaxSizePolicy.USED_HEAP_PERCENTAGE)); // limita por heap
+        config.addMapConfig(mapConfig);
+
         java.util.logging.Logger rootLogger = LogManager.getLogManager().getLogger("");
         rootLogger.setLevel(Level.FINE);
         for (Handler h : rootLogger.getHandlers()) {
