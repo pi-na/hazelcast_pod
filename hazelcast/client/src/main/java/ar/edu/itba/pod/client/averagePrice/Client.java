@@ -6,6 +6,7 @@ import ar.edu.itba.pod.api.common.Zone;
 import ar.edu.itba.pod.api.enums.Params;
 import ar.edu.itba.pod.client.params.DefaultParams;
 import ar.edu.itba.pod.client.utilities.*;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
@@ -35,58 +36,58 @@ public class Client {
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException {
-        HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-        IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5");
-        Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
+        try {
+            HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
+            IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5");
+            Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
-        timeLogger.log("Inicio de la lectura del archivo", 42);
-        CsvParser<TripData> csvParser = new CsvParser<>(iMap, new AveragePriceParser(zones));
-        csvParser.processAndLoadCSV(params.getInPath());
-        timeLogger.log("Fin de la lectura del archivo", 45);
+            timeLogger.log("Inicio de la lectura del archivo", 42);
+            CsvParser<TripData> csvParser = new CsvParser<>(iMap, new AveragePriceParser(zones));
+            csvParser.processAndLoadCSV(params.getInPath());
+            timeLogger.log("Fin de la lectura del archivo", 45);
 
-        timeLogger.log("Inicio del trabajo map/reduce", 47);
+            timeLogger.log("Inicio del trabajo map/reduce", 47);
 
-        KeyValueSource<Long, TripData> keyValueSource = KeyValueSource.fromMap(iMap);
-        JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
-        Job<Long, TripData> job = jobTracker.newJob(keyValueSource);
+            KeyValueSource<Long, TripData> keyValueSource = KeyValueSource.fromMap(iMap);
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
+            Job<Long, TripData> job = jobTracker.newJob(keyValueSource);
 
-        ICompletableFuture<Map<AverageKeyOut, Double>> future = job
-                .mapper(new AveragePriceMapper())
-                .reducer(new AveragePriceReducerFactory())
-                .submit();
+            ICompletableFuture<Map<AverageKeyOut, Double>> future = job
+                    .mapper(new AveragePriceMapper())
+                    .reducer(new AveragePriceReducerFactory())
+                    .submit();
 
-        Map<AverageKeyOut, Double> result = future.get();
-        
-        timeLogger.log("Inicio del trabajo map/reduce", 47);
+            Map<AverageKeyOut, Double> result = future.get();
 
-        // Orden: DESC por avgFare, luego alfabetico por borough y luego por company
-        SortedSet<AveragePriceOutput> finalOutput = new TreeSet<>(
-                Comparator.<AveragePriceOutput>comparingDouble(AveragePriceOutput::avgFare).reversed()
-                        .thenComparing(AveragePriceOutput::pickUpBorough)
-                        .thenComparing(AveragePriceOutput::company)
-        );
+            timeLogger.log("Inicio del trabajo map/reduce", 47);
 
-        for (Map.Entry<AverageKeyOut, Double> e : result.entrySet()) {
-            finalOutput.add(new AveragePriceOutput(
-                    e.getKey().getPickUpBorough(),
-                    e.getKey().getCompany(),
-                    e.getValue() // ya viene truncado a 2 decimales desde el Reducer
-            ));
+            // Orden: DESC por avgFare, luego alfabetico por borough y luego por company
+            SortedSet<AveragePriceOutput> finalOutput = new TreeSet<>(
+                    Comparator.<AveragePriceOutput>comparingDouble(AveragePriceOutput::avgFare).reversed()
+                            .thenComparing(AveragePriceOutput::pickUpBorough)
+                            .thenComparing(AveragePriceOutput::company)
+            );
+
+            for (Map.Entry<AverageKeyOut, Double> e : result.entrySet()) {
+                finalOutput.add(new AveragePriceOutput(
+                        e.getKey().getPickUpBorough(),
+                        e.getKey().getCompany(),
+                        e.getValue() // ya viene truncado a 2 decimales desde el Reducer
+                ));
+            }
+
+            // Escribimos CSV
+            ResultCsvWriter.writeCsv(
+                    params.getOutPath(),
+                    "query3.csv",
+                    "pickUpBorough;company;avgFare",
+                    finalOutput
+            );
+
+            timeLogger.log("Fin del trabajo map/reduce", 87);
+        } finally {
+            HazelcastClient.shutdownAll();
         }
-
-        // Escribimos CSV
-        ResultCsvWriter.writeCsv(
-                params.getOutPath(),
-                "query3.csv",
-                "pickUpBorough;company;avgFare",
-                finalOutput
-        );
-        logger.info("Se escribio el archivo");
-
-        iMap.destroy();
-        logger.info("IMap destruido");
-
-        timeLogger.log("Fin del trabajo map/reduce", 87);
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {

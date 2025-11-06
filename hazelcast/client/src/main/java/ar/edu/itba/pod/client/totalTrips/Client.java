@@ -5,6 +5,7 @@ import ar.edu.itba.pod.api.enums.Params;
 import ar.edu.itba.pod.api.totalTrips.*;
 import ar.edu.itba.pod.client.params.DefaultParams;
 import ar.edu.itba.pod.client.utilities.*;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
@@ -34,62 +35,62 @@ public class Client {
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException {
-        HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-        IMap<Long, MinimalTrip> iMap = hazelcastInstance.getMap("g5");
+        try {
+            HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
+            IMap<Long, MinimalTrip> iMap = hazelcastInstance.getMap("g5");
 
-        timeLogger.log("Inicio de la lectura del archivo", 82);
-        CsvParser<MinimalTrip> csvParser = new CsvParser<>(iMap, new MinimalTripParser());
-        csvParser.processAndLoadCSV(params.getInPath());
-        timeLogger.log("Fin de la lectura del archivo", 84);
+            timeLogger.log("Inicio de la lectura del archivo", 82);
+            CsvParser<MinimalTrip> csvParser = new CsvParser<>(iMap, new MinimalTripParser());
+            csvParser.processAndLoadCSV(params.getInPath());
+            timeLogger.log("Fin de la lectura del archivo", 84);
 
-        // TODO: POR QUE EL TIME LOGGER NECESITA EL LINE NUMBER??????????????
-        timeLogger.log("Inicio del trabajo map/reduce", 85);
+            // TODO: POR QUE EL TIME LOGGER NECESITA EL LINE NUMBER??????????????
+            timeLogger.log("Inicio del trabajo map/reduce", 85);
 
-        KeyValueSource<Long, MinimalTrip> keyValueSource = KeyValueSource.fromMap(iMap);
-        JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
-        Job<Long, MinimalTrip> job = jobTracker.newJob(keyValueSource);
+            KeyValueSource<Long, MinimalTrip> keyValueSource = KeyValueSource.fromMap(iMap);
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-total-trips");
+            Job<Long, MinimalTrip> job = jobTracker.newJob(keyValueSource);
 
-        ICompletableFuture<Map<String, TotalTripsResult>> future = job
-                .mapper(new TotalTripsMapper())
-                .combiner(new TotalTripsCombinerFactory())
-                .reducer(new TotalTripsReducerFactory())
-                .submit(new TotalTripsCollator());
+            ICompletableFuture<Map<String, TotalTripsResult>> future = job
+                    .mapper(new TotalTripsMapper())
+                    .combiner(new TotalTripsCombinerFactory())
+                    .reducer(new TotalTripsReducerFactory())
+                    .submit(new TotalTripsCollator());
 
-        Map<String, TotalTripsResult> result = future.get();
-        // TODO AJUSTAR LOGS PARA MATCHEAR CONSIGNA
-        logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
+            Map<String, TotalTripsResult> result = future.get();
+            // TODO AJUSTAR LOGS PARA MATCHEAR CONSIGNA
+            logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
 
-        Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
+            Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
-        SortedSet<TotalTripOutput> finalOutput = new TreeSet<>(
-                Comparator.comparing(TotalTripOutput::total).reversed()
-                        .thenComparing(TotalTripOutput::pickUpZone)
-                        .thenComparing(TotalTripOutput::dropOffZone)
-        );
+            SortedSet<TotalTripOutput> finalOutput = new TreeSet<>(
+                    Comparator.comparing(TotalTripOutput::total).reversed()
+                            .thenComparing(TotalTripOutput::pickUpZone)
+                            .thenComparing(TotalTripOutput::dropOffZone)
+            );
 
-        for (TotalTripsResult r : result.values()) {
-            String puName = zones.get(r.pickUpZone()).getZoneName();
-            String doName = zones.get(r.dropOffZone()).getZoneName();
+            for (TotalTripsResult r : result.values()) {
+                String puName = zones.get(r.pickUpZone()).getZoneName();
+                String doName = zones.get(r.dropOffZone()).getZoneName();
 
-            finalOutput.add(new TotalTripOutput(
-                    puName,
-                    doName,
-                    r.total()
-            ));
+                finalOutput.add(new TotalTripOutput(
+                        puName,
+                        doName,
+                        r.total()
+                ));
+            }
+
+            ResultCsvWriter.writeCsv(
+                    params.getOutPath(),
+                    QUERY1_CSV,
+                    QUERY1_CSV_HEADERS,
+                    finalOutput
+            );
+
+            timeLogger.log("Fin del trabajo map/reduce", 87);
+        } finally {
+            HazelcastClient.shutdownAll();
         }
-
-        ResultCsvWriter.writeCsv(
-                params.getOutPath(),
-                QUERY1_CSV,
-                QUERY1_CSV_HEADERS,
-                finalOutput
-        );
-        logger.info("Se escribio el archivo");
-
-        iMap.destroy();
-        logger.info("IMap destruido");
-
-        timeLogger.log("Fin del trabajo map/reduce", 87);
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
