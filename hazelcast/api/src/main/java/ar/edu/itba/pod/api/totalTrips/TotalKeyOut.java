@@ -4,15 +4,12 @@ import com.hazelcast.nio.ObjectDataInput;
 import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
-import java.util.Objects;
 
-// Ocupa 8 bytes en total (2 ints) más overhead mínimo de serialización.
 public class TotalKeyOut implements DataSerializable, Comparable<TotalKeyOut> {
-    // ASUMIMOS QUE LOS ZONAS SON ENTEROS MENORES a 32.767 (MAX VALUE DE SHORT)
-    private short pickUpZone;   // enteros menores a 1000 → cabe en short
+    private short pickUpZone;
     private short dropOffZone;
 
-    public TotalKeyOut() {} // requerido por Hazelcast
+    public TotalKeyOut() {}
     public TotalKeyOut(short pickUpZone, short dropOffZone) {
         this.pickUpZone = pickUpZone;
         this.dropOffZone = dropOffZone;

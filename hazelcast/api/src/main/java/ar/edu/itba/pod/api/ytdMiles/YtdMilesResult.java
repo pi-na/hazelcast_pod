@@ -9,7 +9,6 @@ public record YtdMilesResult(
     
     @Override
     public String toString() {
-        // Truncate miles to 2 decimals (not round)
         double truncatedMiles = Math.floor(milesYTD * 100) / 100.0;
         
         return String.format("%s;%d;%d;%.2f", 
@@ -22,7 +21,6 @@ public record YtdMilesResult(
 
     @Override
     public int compareTo(YtdMilesResult other) {
-        // Order: alphabetically by company, then chronologically by year and month
         int companyComp = this.company.compareTo(other.company);
         if (companyComp != 0) return companyComp;
         

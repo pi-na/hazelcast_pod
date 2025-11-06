@@ -6,7 +6,6 @@ import com.hazelcast.nio.ObjectDataOutput;
 import com.hazelcast.nio.serialization.DataSerializable;
 import java.io.IOException;
 
-// Tamaño en memoria ≈ 8 bytes + overhead de Hazelcast.
 public class MinimalTrip implements DataSerializable, ParsedRow {
     public short pickUpZone;
     public short dropOffZone;

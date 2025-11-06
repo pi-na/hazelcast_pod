@@ -28,9 +28,6 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 
-import static ar.edu.itba.pod.client.QueryCLient.getFilesPath;
-import static ar.edu.itba.pod.client.QueryCLient.getZones;
-
 public class Client{
 
     private static final String QUERY2_CSV = "query2.csv";
@@ -106,7 +103,7 @@ public class Client{
 
 
     public <V extends ParsedRow> void processAndLoadCSV(IMap<Long, V> iMap) throws IOException {
-        PairFiles csvsPath = getFilesPath(params.getInPath());
+        PairFiles csvsPath = CsvUtils.getFilesPath(params.getInPath());
         Map<Integer, Zone> zones = CsvUtils.getZones(csvsPath.getzonesFiles());
 
         final int BATCH_SIZE = 1000;

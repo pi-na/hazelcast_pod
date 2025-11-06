@@ -12,7 +12,6 @@ public class LongestWaitReducerValue implements DataSerializable {
     private String doLocationName;
     private String puLocationName;
 
-    // Constructor vacío obligatorio para Hazelcast
     public LongestWaitReducerValue() {}
 
     public LongestWaitReducerValue(long doLocationID, long waitTimeMillis, String doLocationName, String puLocationName) {

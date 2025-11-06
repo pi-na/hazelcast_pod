@@ -3,7 +3,6 @@ package ar.edu.itba.pod.api.longestWait;
 import com.hazelcast.mapreduce.Context;
 import com.hazelcast.mapreduce.Mapper;
 
-//                                              LineaCSV                      pickUpLocationID
 public class LongestWaitMapper implements Mapper<Long, LongestWaitTripData, Integer, LongestWaitReducerValue> {
     @Override
     public void map(Long keyIn, LongestWaitTripData longestWaitTripData, Context<Integer, LongestWaitReducerValue> context) {

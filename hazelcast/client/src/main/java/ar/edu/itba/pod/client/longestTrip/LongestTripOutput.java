@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.api.longestTrip;
+package ar.edu.itba.pod.client.longestTrip;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
