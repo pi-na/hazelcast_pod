@@ -51,7 +51,7 @@ public abstract class QueryCLient<T> {
         }
     }
 
-    private static PairFiles getFilesPath(String inPath) {
+    public static PairFiles getFilesPath(String inPath) {
         File folder = new File(inPath);
         if (!folder.exists() || !folder.isDirectory()) {
             throw new IllegalArgumentException("The input path does not exist or is not a valid directory: " + inPath);
@@ -121,7 +121,7 @@ public abstract class QueryCLient<T> {
         return genericParseRows(files, zones, borough);
     }
 
-    private static Map<Integer, Zone> getZones(String zonesFilePath) throws IOException {
+    public static Map<Integer, Zone> getZones(String zonesFilePath) throws IOException {
         try (Stream<String> lines = Files.lines(Paths.get(zonesFilePath), StandardCharsets.UTF_8)) {
             return lines.skip(1) // skip header
                     .map(line -> line.split(DIVIDER))

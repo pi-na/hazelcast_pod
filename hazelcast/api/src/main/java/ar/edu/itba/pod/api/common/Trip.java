@@ -1,8 +1,5 @@
 package ar.edu.itba.pod.api.common;
 
-import ar.edu.itba.pod.api.AveragePrice.CompanyTrips;
-import ar.edu.itba.pod.api.longestTrip.LongestTrip;
-import ar.edu.itba.pod.api.longestWait.LongestWaitMapperValueIn;
 import ar.edu.itba.pod.api.totalTrips.TotalTrips;
 import ar.edu.itba.pod.api.ytdMiles.YtdMilesTrip;
 import com.hazelcast.nio.ObjectDataInput;
@@ -11,7 +8,7 @@ import com.hazelcast.nio.serialization.DataSerializable;
 
 import java.io.IOException;
 
-public class Trip implements DataSerializable, TotalTrips, LongestTrip, YtdMilesTrip, CompanyTrips, LongestWaitMapperValueIn {
+public class Trip implements ParsedRow, DataSerializable, TotalTrips {
     private String company;
     private String request_datetime;
     private String pickup_datetime;

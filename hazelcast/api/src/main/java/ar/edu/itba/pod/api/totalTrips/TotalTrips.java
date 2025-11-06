@@ -1,7 +1,9 @@
 package ar.edu.itba.pod.api.totalTrips;
 
 
-public interface TotalTrips{
+import ar.edu.itba.pod.api.common.ParsedRow;
+
+public interface TotalTrips extends ParsedRow {
     String getPickUpZone();
     String getDropoffZone();
     Double getBasePassengerFare();
