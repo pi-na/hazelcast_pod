@@ -6,20 +6,20 @@ import com.hazelcast.mapreduce.CombinerFactory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class LongestTripCombinerFactory implements CombinerFactory<String, LongestTripData, LongestTripData> {
+public class LongestTripCombinerFactory implements CombinerFactory<Integer, LongestTrip, LongestTrip> {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public Combiner<LongestTripData, LongestTripData> newCombiner(String key) {
+    public Combiner<LongestTrip, LongestTrip> newCombiner(Integer key) {
         return new LongestTripCombiner();
     }
 
-    private static class LongestTripCombiner extends Combiner<LongestTripData, LongestTripData> {
-        private LongestTripData longest = null;
+    private static class LongestTripCombiner extends Combiner<LongestTrip, LongestTrip> {
+        private LongestTrip longest = null;
 
         @Override
-        public void combine(LongestTripData value) {
+        public void combine(LongestTrip value) {
             if (longest == null) {
                 longest = value;
             } else {
@@ -39,7 +39,7 @@ public class LongestTripCombinerFactory implements CombinerFactory<String, Longe
         }
 
         @Override
-        public LongestTripData finalizeChunk() {
+        public LongestTrip finalizeChunk() {
             return longest;
         }
 

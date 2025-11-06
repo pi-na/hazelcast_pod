@@ -4,25 +4,25 @@ import com.hazelcast.mapreduce.Collator;
 
 import java.util.*;
 
-public class LongestTripCollator implements Collator<Map.Entry<String, LongestTripData>, Map<String, LongestTripResult>> {
+public class LongestTripCollator implements Collator<Map.Entry<Integer, LongestTrip>, Map<String, LongestTripResult>> {
 
     @Override
-    public Map<String, LongestTripResult> collate(Iterable<Map.Entry<String, LongestTripData>> values) {
+    public Map<String, LongestTripResult> collate(Iterable<Map.Entry<Integer, LongestTrip>> values) {
         Map<String, LongestTripResult> resultsMap = new HashMap<>();
 
-        for (Map.Entry<String, LongestTripData> entry : values) {
-            String pickUpZone = entry.getKey();
-            LongestTripData tripData = entry.getValue();
+        for (Map.Entry<Integer, LongestTrip> entry : values) {
+            Integer pickUpZone = entry.getKey();
+            LongestTrip tripData = entry.getValue();
 
             LongestTripResult result = new LongestTripResult(
-                pickUpZone,
-                tripData.getDropOffZone(),
+                tripData.getPickUpZone(),
+                tripData.dropOffZone,
                 tripData.getRequestDateTime(),
                 tripData.getMiles(),
                 tripData.getCompany()
             );
 
-            resultsMap.put(pickUpZone, result);
+            resultsMap.put(pickUpZone.toString(), result);
         }
 
         return resultsMap;

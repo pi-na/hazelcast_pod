@@ -6,21 +6,21 @@ import com.hazelcast.mapreduce.ReducerFactory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-public class LongestTripReducerFactory implements ReducerFactory<String, LongestTripData, LongestTripData> {
+public class LongestTripReducerFactory implements ReducerFactory<Integer, LongestTrip, LongestTrip> {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
-    public Reducer<LongestTripData, LongestTripData> newReducer(final String pickUpZone) {
+    public Reducer<LongestTrip, LongestTrip> newReducer(final Integer pickUpZone) {
         return new LongestReducer();
     }
 
-    private class LongestReducer extends Reducer<LongestTripData, LongestTripData> {
+    private class LongestReducer extends Reducer<LongestTrip, LongestTrip> {
 
-        private LongestTripData longest = null;
+        private LongestTrip longest = null;
 
         @Override
-        public void reduce(final LongestTripData value) {
+        public void reduce(final LongestTrip value) {
             if (longest == null) {
                 longest = value;
             } else {
@@ -40,7 +40,7 @@ public class LongestTripReducerFactory implements ReducerFactory<String, Longest
         }
 
         @Override
-        public LongestTripData finalizeReduce() {
+        public LongestTrip finalizeReduce() {
             return longest;
         }
     }

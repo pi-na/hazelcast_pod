@@ -4,10 +4,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public record LongestTripResult(
-    String pickUpZone, 
-    String longestDOZone, 
+    short pickUpZone,
+    short longestDOZone,
     String longestReqDateTime, 
-    Double longestMiles, 
+    double longestMiles,
     String longestCompany
 ) {
     private static final DateTimeFormatter INPUT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -31,8 +31,20 @@ public record LongestTripResult(
         );
     }
 
-    public String getKey() {
+    public short getKey() {
         return pickUpZone;
+    }
+    public short getLongestDOZone() {
+        return longestDOZone;
+    }
+    public String getLongestReqDateTime() {
+        return longestReqDateTime;
+    }
+    public double getLongestMiles() {
+        return longestMiles;
+    }
+    public String getLongestCompany() {
+        return longestCompany;
     }
 }
 
