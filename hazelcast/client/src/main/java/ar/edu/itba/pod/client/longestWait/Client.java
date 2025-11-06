@@ -9,6 +9,7 @@ import ar.edu.itba.pod.client.utilities.CsvUtils;
 import ar.edu.itba.pod.client.utilities.HazelcastClientFactory;
 import ar.edu.itba.pod.client.utilities.ResultCsvWriter;
 import ar.edu.itba.pod.client.utilities.TimeLogger;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ICompletableFuture;
 import com.hazelcast.core.IMap;
@@ -39,51 +40,52 @@ public class Client {
     }
 
     public void run() throws IOException, ExecutionException, InterruptedException {
-        HazelcastInstance hz = HazelcastClientFactory.newHazelcastClient(params);
-        IMap<Long, LongestWaitTripData> iMap = hz.getMap("g5");
+        try {
+            HazelcastInstance hz = HazelcastClientFactory.newHazelcastClient(params);
+            IMap<Long, LongestWaitTripData> iMap = hz.getMap("g5");
 
-        Map<Integer, Zone> zones =
-                CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
-        String borough = System.getProperty(Params.BOROUGH.getParam());
-        if (borough == null || borough.isBlank()) {
-            throw new IllegalArgumentException("Falta parámetro -D" + Params.BOROUGH.getParam() + " (ej: -Dborough=Manhattan)");
+            Map<Integer, Zone> zones =
+                    CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
+            String borough = System.getProperty(Params.BOROUGH.getParam());
+            if (borough == null || borough.isBlank()) {
+                throw new IllegalArgumentException("Falta parámetro -D" + Params.BOROUGH.getParam() + " (ej: -Dborough=Manhattan)");
+            }
+
+            timeLogger.log("Inicio de la lectura del archivo", 53);
+            CsvParser<LongestWaitTripData> csvParser =
+                    new CsvParser<>(iMap, new LongestWaitParser(zones, borough));
+            csvParser.processAndLoadCSV(params.getInPath());
+            timeLogger.log("Fin de la lectura del archivo", 57);
+
+            KeyValueSource<Long, LongestWaitTripData> kvs = KeyValueSource.fromMap(iMap);
+            JobTracker jobTracker = hz.getJobTracker("g5-longest-wait");
+            Job<Long, LongestWaitTripData> job = jobTracker.newJob(kvs);
+
+            timeLogger.log("Inicio del trabajo map/reduce", 60);
+            ICompletableFuture<List<LongestWaitResultRow>> future = job
+                    .mapper(new LongestWaitMapper())
+                    .combiner(new LongestWaitCombinerFactory())
+                    .reducer(new LongestWaitReducerFactory())
+                    .submit(new LongestWaitCollator());
+
+            List<LongestWaitResultRow> rows = future.get();
+            timeLogger.log("Fin el trabajo map/reduce", 87);
+
+            rows.sort(
+                    Comparator.comparing(LongestWaitResultRow::getPickUpZone)
+                            .thenComparing(LongestWaitResultRow::getDropOffZone)
+            );
+
+            ResultCsvWriter.writeCsv(
+                    params.getOutPath(),
+                    QUERY4_CSV,
+                    QUERY4_HEADERS,
+                    rows
+            );
+            logger.info("Se escribió {}", QUERY4_CSV);
+        } finally {
+            HazelcastClient.shutdownAll();
         }
-
-        timeLogger.log("Inicio de la lectura del archivo", 53);
-        CsvParser<LongestWaitTripData> csvParser =
-                new CsvParser<>(iMap, new LongestWaitParser(zones, borough));
-        csvParser.processAndLoadCSV(params.getInPath());
-        timeLogger.log("Fin de la lectura del archivo", 57);
-
-        KeyValueSource<Long, LongestWaitTripData> kvs = KeyValueSource.fromMap(iMap);
-        JobTracker jobTracker = hz.getJobTracker("g5-longest-wait");
-        Job<Long, LongestWaitTripData> job = jobTracker.newJob(kvs);
-
-        timeLogger.log("Inicio del trabajo map/reduce", 60);
-        ICompletableFuture<List<LongestWaitResultRow>> future = job
-                .mapper(new LongestWaitMapper())
-                .combiner(new LongestWaitCombinerFactory())
-                .reducer(new LongestWaitReducerFactory())
-                .submit(new LongestWaitCollator());
-
-        List<LongestWaitResultRow> rows = future.get();
-        timeLogger.log("Fin el trabajo map/reduce", 87);
-
-        rows.sort(
-                Comparator.comparing(LongestWaitResultRow::getPickUpZone)
-                        .thenComparing(LongestWaitResultRow::getDropOffZone)
-        );
-
-        ResultCsvWriter.writeCsv(
-                params.getOutPath(),
-                QUERY4_CSV,
-                QUERY4_HEADERS,
-                rows
-        );
-        logger.info("Se escribió {}", QUERY4_CSV);
-
-        iMap.destroy();
-        logger.info("IMap destruido");
     }
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
