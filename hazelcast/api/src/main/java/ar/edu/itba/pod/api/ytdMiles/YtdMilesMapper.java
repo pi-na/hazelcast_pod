@@ -12,6 +12,7 @@ public class YtdMilesMapper implements Mapper<Long, YtdMilesTrip, CompanyYearMon
 
     @Override
     public void map(Long key, YtdMilesTrip value, Context<CompanyYearMonth, Double> context) {
+        // Parse request_datetime to extract year and month
         LocalDateTime requestDate = LocalDateTime.parse(value.getRequest_datetime(), DATE_FORMATTER);
         
         int year = requestDate.getYear();
