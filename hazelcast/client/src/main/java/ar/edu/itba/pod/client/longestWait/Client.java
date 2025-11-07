@@ -28,7 +28,6 @@ public class Client {
     private static final String QUERY4_HEADERS = "pickUpZone;dropOffZone;delayInSeconds";
     private static final int QUERY_NUMBER = 4;
 
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Client.class);
     private static TimeLogger timeLogger = null;
 
     private final DefaultParams params;
@@ -61,7 +60,7 @@ public class Client {
             JobTracker jobTracker = hz.getJobTracker("g5-longestWait");
             Job<Long, LongestWaitTripData> job = jobTracker.newJob(kvs);
 
-            timeLogger.log("Inicio del trabajo map/reduce", 60);
+            timeLogger.log("Inicio del trabajo map/reduce", 63);
             ICompletableFuture<List<LongestWaitResultRow>> future = job
                     .mapper(new LongestWaitMapper())
                     .combiner(new LongestWaitCombinerFactory())
@@ -69,7 +68,7 @@ public class Client {
                     .submit(new LongestWaitCollator());
 
             List<LongestWaitResultRow> rows = future.get();
-            timeLogger.log("Fin el trabajo map/reduce", 87);
+            timeLogger.log("Fin el trabajo map/reduce", 71);
 
             rows.sort(
                     Comparator.comparing(LongestWaitResultRow::getPickUpZone)
@@ -82,7 +81,8 @@ public class Client {
                     QUERY4_HEADERS,
                     rows
             );
-            logger.info("Se escribió {}", QUERY4_CSV);
+            iMap.clear();
+
         } finally {
             HazelcastClient.shutdownAll();
         }

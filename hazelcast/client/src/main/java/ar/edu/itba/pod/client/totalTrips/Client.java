@@ -39,12 +39,12 @@ public class Client {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, MinimalTrip> iMap = hazelcastInstance.getMap("g5-totalTrips");
 
-            timeLogger.log("Inicio de la lectura del archivo", 82);
+            timeLogger.log("Inicio de la lectura del archivo", 42);
             CsvParser<MinimalTrip> csvParser = new CsvParser<>(iMap, new MinimalTripParser());
             csvParser.processAndLoadCSV(params.getInPath());
-            timeLogger.log("Fin de la lectura del archivo", 84);
+            timeLogger.log("Fin de la lectura del archivo", 45);
 
-            timeLogger.log("Inicio del trabajo map/reduce", 85);
+            timeLogger.log("Inicio del trabajo map/reduce", 47);
 
             KeyValueSource<Long, MinimalTrip> keyValueSource = KeyValueSource.fromMap(iMap);
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-totalTrips");
@@ -84,7 +84,9 @@ public class Client {
                     finalOutput
             );
 
-            timeLogger.log("Fin del trabajo map/reduce", 87);
+            iMap.clear();
+
+            timeLogger.log("Fin del trabajo map/reduce", 89);
         } finally {
             HazelcastClient.shutdownAll();
         }

@@ -41,12 +41,12 @@ public class Client {
             IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5-averagePrice");
             Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
-            timeLogger.log("Inicio de la lectura del archivo", 42);
+            timeLogger.log("Inicio de la lectura del archivo", 44);
             CsvParser<TripData> csvParser = new CsvParser<>(iMap, new AveragePriceParser(zones));
             csvParser.processAndLoadCSV(params.getInPath());
-            timeLogger.log("Fin de la lectura del archivo", 45);
+            timeLogger.log("Fin de la lectura del archivo", 47);
 
-            timeLogger.log("Inicio del trabajo map/reduce", 47);
+            timeLogger.log("Inicio del trabajo map/reduce", 49);
 
             KeyValueSource<Long, TripData> keyValueSource = KeyValueSource.fromMap(iMap);
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-averagePrice");
@@ -58,8 +58,6 @@ public class Client {
                     .submit();
 
             Map<AverageKeyOut, Double> result = future.get();
-
-            timeLogger.log("Inicio del trabajo map/reduce", 47);
 
             SortedSet<AveragePriceOutput> finalOutput = new TreeSet<>(
                     Comparator.<AveragePriceOutput>comparingDouble(AveragePriceOutput::avgFare).reversed()
@@ -81,8 +79,8 @@ public class Client {
                     "pickUpBorough;company;avgFare",
                     finalOutput
             );
-
-            timeLogger.log("Fin del trabajo map/reduce", 87);
+            iMap.clear();
+            timeLogger.log("Fin del trabajo map/reduce", 85);
         } finally {
             HazelcastClient.shutdownAll();
         }

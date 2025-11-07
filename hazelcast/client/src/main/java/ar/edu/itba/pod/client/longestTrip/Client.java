@@ -27,7 +27,6 @@ public class Client {
     private static final String QUERY2_CSV_HEADERS = "pickUpZone;longestDOZone;longestReqDateTime;longestMiles;longestCompany";
     private static final int QUERY_NUMBER = 2;
     private static TimeLogger timeLogger = null;
-    private static final Logger logger = LoggerFactory.getLogger(Client.class);
     private final DefaultParams params;
 
     public Client(DefaultParams params) {
@@ -41,12 +40,12 @@ public class Client {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, LongestTrip> iMap = hazelcastInstance.getMap("g5-longestTrip");
 
-            timeLogger.log("Inicio de la lectura del archivo", 82);
+            timeLogger.log("Inicio de la lectura del archivo", 43);
             CsvParser<LongestTrip> csvParser = new CsvParser<>(iMap, new LongestTripParser());
             csvParser.processAndLoadCSV(params.getInPath());
-            timeLogger.log("Fin de la lectura del archivo", 84);
+            timeLogger.log("Fin de la lectura del archivo", 46);
 
-            timeLogger.log("Inicio del trabajo map/reduce", 85);
+            timeLogger.log("Inicio del trabajo map/reduce", 48);
 
             KeyValueSource<Long, LongestTrip> keyValueSource = KeyValueSource.fromMap(iMap);
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-longestTrip");
@@ -59,7 +58,6 @@ public class Client {
                     .submit(new LongestTripCollator());
 
             Map<String, LongestTripResult> result = future.get();
-            logger.info("Map/Reduce finalizado, post-procesando y escribiendo resultados en CSV...");
 
             Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
@@ -83,10 +81,8 @@ public class Client {
             }
 
             ResultCsvWriter.writeCsv(params.getOutPath(), QUERY2_CSV, QUERY2_CSV_HEADERS, finalResult);
-            logger.info("Se escribio el archivo");
 
-            iMap.destroy();
-            logger.info("IMap destruido");
+            iMap.clear();
 
             timeLogger.log("Fin del trabajo map/reduce", 87);
         } finally {

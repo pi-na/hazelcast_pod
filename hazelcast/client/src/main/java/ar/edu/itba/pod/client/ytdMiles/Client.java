@@ -37,12 +37,12 @@ public class Client {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
             IMap<Long, YtdMilesTrip> iMap = hazelcastInstance.getMap("g5-ytdMiles");
 
-            timeLogger.log("Inicio de la lectura del archivo", 82);
+            timeLogger.log("Inicio de la lectura del archivo", 40);
             CsvParser<YtdMilesTrip> csvParser = new CsvParser<>(iMap, new YtdMilesTripParser());
             csvParser.processAndLoadCSV(params.getInPath());
-            timeLogger.log("Fin de la lectura del archivo", 84);
+            timeLogger.log("Fin de la lectura del archivo", 43);
 
-            timeLogger.log("Inicio del trabajo map/reduce", 85);
+            timeLogger.log("Inicio del trabajo map/reduce", 45);
 
             KeyValueSource<Long, YtdMilesTrip> keyValueSource = KeyValueSource.fromMap(iMap);
             JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-ytdMiles");
@@ -56,6 +56,9 @@ public class Client {
 
             List<YtdMilesResult> result = future.get();
             ResultCsvWriter.writeCsv(params.getOutPath(), QUERY5_CSV, QUERY5_CSV_HEADERS, result);
+            iMap.clear();
+
+            timeLogger.log("Fin del trabajo map/reduce", 61);
         } finally {
             HazelcastClient.shutdownAll();
         }
