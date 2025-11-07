@@ -28,8 +28,6 @@ public class AveragePriceParser implements RowParser<TripData> {
     public Optional<TripData> parseRow(String[] cols, Map<Integer, Zone> zones) {
         int pu = Integer.parseInt(cols[TripsColumns.PULOCATIONID.getIndex()].trim());
         int doL = Integer.parseInt(cols[TripsColumns.DOLOCATIONID.getIndex()].trim());
-        // Solo se deben considerar los viajes que inician en una zona distinta a "Outside of NYC"
-        // Solo se deben listar las zonas presentes en el archivo de zonas
         if(pu == outsideOfNycZoneId || !zones.containsKey(pu) || !zones.containsKey(doL)) return Optional.empty();
 
         String pickupBorough = zones.get(pu).getBorough();

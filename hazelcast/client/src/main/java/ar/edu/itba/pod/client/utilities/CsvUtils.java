@@ -26,7 +26,7 @@ public class CsvUtils {
 
     public static Map<Integer, Zone> getZones(String zonesFilePath) throws IOException {
         try (Stream<String> lines = Files.lines(Paths.get(zonesFilePath), StandardCharsets.UTF_8)) {
-            return lines.skip(1) // skip header
+            return lines.skip(1)
                     .map(line -> line.split(DIVIDER))
                     .collect(Collectors.toMap(
                             cols -> Integer.parseInt(cols[0].trim()),

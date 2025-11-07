@@ -42,7 +42,7 @@ public class Client {
     public void run() throws IOException, ExecutionException, InterruptedException {
         try {
             HazelcastInstance hz = HazelcastClientFactory.newHazelcastClient(params);
-            IMap<Long, LongestWaitTripData> iMap = hz.getMap("g5");
+            IMap<Long, LongestWaitTripData> iMap = hz.getMap("g5-longestWait");
 
             Map<Integer, Zone> zones =
                     CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
@@ -58,7 +58,7 @@ public class Client {
             timeLogger.log("Fin de la lectura del archivo", 57);
 
             KeyValueSource<Long, LongestWaitTripData> kvs = KeyValueSource.fromMap(iMap);
-            JobTracker jobTracker = hz.getJobTracker("g5-longest-wait");
+            JobTracker jobTracker = hz.getJobTracker("g5-longestWait");
             Job<Long, LongestWaitTripData> job = jobTracker.newJob(kvs);
 
             timeLogger.log("Inicio del trabajo map/reduce", 60);

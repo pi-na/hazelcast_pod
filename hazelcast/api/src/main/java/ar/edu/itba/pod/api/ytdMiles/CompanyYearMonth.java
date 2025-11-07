@@ -14,7 +14,6 @@ public class CompanyYearMonth implements DataSerializable, Comparable<CompanyYea
     private int month;
 
     public CompanyYearMonth() {
-        // Default constructor for deserialization
     }
 
     public CompanyYearMonth(String company, int year, int month) {

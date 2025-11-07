@@ -17,7 +17,7 @@ public class LongestWaitCollator implements Collator<Map.Entry<Integer, LongestW
             resultRows.add(new LongestWaitResultRow(
                     v.puLocationName(),
                     v.doLocationName(),
-                    v.waitTimeMillis() / 1000      // Convertimos a segundos
+                    v.waitTimeMillis() / 1000
             ));
         }
 

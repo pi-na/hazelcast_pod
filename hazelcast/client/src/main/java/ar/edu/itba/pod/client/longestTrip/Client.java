@@ -39,7 +39,7 @@ public class Client {
     public void run() throws IOException, ExecutionException, InterruptedException {
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-            IMap<Long, LongestTrip> iMap = hazelcastInstance.getMap("g5");
+            IMap<Long, LongestTrip> iMap = hazelcastInstance.getMap("g5-longestTrip");
 
             timeLogger.log("Inicio de la lectura del archivo", 82);
             CsvParser<LongestTrip> csvParser = new CsvParser<>(iMap, new LongestTripParser());
@@ -49,7 +49,7 @@ public class Client {
             timeLogger.log("Inicio del trabajo map/reduce", 85);
 
             KeyValueSource<Long, LongestTrip> keyValueSource = KeyValueSource.fromMap(iMap);
-            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-longest-trip");
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-longestTrip");
             Job<Long, LongestTrip> job = jobTracker.newJob(keyValueSource);
 
             ICompletableFuture<Map<String, LongestTripResult>> future = job

@@ -38,7 +38,7 @@ public class Client {
     public void run() throws IOException, ExecutionException, InterruptedException {
         try {
             HazelcastInstance hazelcastInstance = HazelcastClientFactory.newHazelcastClient(params);
-            IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5");
+            IMap<Long, TripData> iMap = hazelcastInstance.getMap("g5-averagePrice");
             Map<Integer, Zone> zones = CsvUtils.getZones(CsvUtils.getFilesPath(params.getInPath()).getzonesFiles());
 
             timeLogger.log("Inicio de la lectura del archivo", 42);
@@ -49,7 +49,7 @@ public class Client {
             timeLogger.log("Inicio del trabajo map/reduce", 47);
 
             KeyValueSource<Long, TripData> keyValueSource = KeyValueSource.fromMap(iMap);
-            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-average-price");
+            JobTracker jobTracker = hazelcastInstance.getJobTracker("g5-averagePrice");
             Job<Long, TripData> job = jobTracker.newJob(keyValueSource);
 
             ICompletableFuture<Map<AverageKeyOut, Double>> future = job
@@ -61,7 +61,6 @@ public class Client {
 
             timeLogger.log("Inicio del trabajo map/reduce", 47);
 
-            // Orden: DESC por avgFare, luego alfabetico por borough y luego por company
             SortedSet<AveragePriceOutput> finalOutput = new TreeSet<>(
                     Comparator.<AveragePriceOutput>comparingDouble(AveragePriceOutput::avgFare).reversed()
                             .thenComparing(AveragePriceOutput::pickUpBorough)
@@ -72,11 +71,10 @@ public class Client {
                 finalOutput.add(new AveragePriceOutput(
                         e.getKey().getPickUpBorough(),
                         e.getKey().getCompany(),
-                        e.getValue() // ya viene truncado a 2 decimales desde el Reducer
+                        e.getValue()
                 ));
             }
 
-            // Escribimos CSV
             ResultCsvWriter.writeCsv(
                     params.getOutPath(),
                     "query3.csv",

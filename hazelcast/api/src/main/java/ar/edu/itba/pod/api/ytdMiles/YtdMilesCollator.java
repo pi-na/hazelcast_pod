@@ -10,7 +10,6 @@ public class YtdMilesCollator implements Collator<Map.Entry<CompanyYearMonth, Do
 
     @Override
     public List<YtdMilesResult> collate(Iterable<Map.Entry<CompanyYearMonth, Double>> values) {
-        // Group by company and year
         Map<String, Map<Integer, Map<Integer, Double>>> companyYearMonthMap = new HashMap<>();
 
         for (Map.Entry<CompanyYearMonth, Double> entry : values) {
@@ -27,7 +26,6 @@ public class YtdMilesCollator implements Collator<Map.Entry<CompanyYearMonth, Do
 
         List<YtdMilesResult> results = new ArrayList<>();
 
-        // Calculate YTD for each company
         for (Map.Entry<String, Map<Integer, Map<Integer, Double>>> companyEntry : companyYearMonthMap.entrySet()) {
             String company = companyEntry.getKey();
 
@@ -35,7 +33,6 @@ public class YtdMilesCollator implements Collator<Map.Entry<CompanyYearMonth, Do
                 int year = yearEntry.getKey();
                 Map<Integer, Double> monthMiles = yearEntry.getValue();
 
-                // Sort months and calculate YTD
                 List<Integer> sortedMonths = new ArrayList<>(monthMiles.keySet());
                 Collections.sort(sortedMonths);
 
@@ -50,7 +47,6 @@ public class YtdMilesCollator implements Collator<Map.Entry<CompanyYearMonth, Do
             }
         }
 
-        // Sort results
         results.sort(Comparator
                 .comparing(YtdMilesResult::company)
                 .thenComparing(YtdMilesResult::year)

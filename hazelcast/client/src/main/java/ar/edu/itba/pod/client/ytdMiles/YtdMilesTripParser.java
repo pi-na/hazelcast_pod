@@ -16,10 +16,8 @@ public class YtdMilesTripParser implements RowParser<YtdMilesTrip> {
             String request_datetime = cols[TripsColumns.REQUEST_DATETIME.getIndex()].trim();
             Double trip_miles = Double.parseDouble(cols[TripsColumns.TRIP_MILES.getIndex()].trim());
 
-            // Query 5 doesn't need zone filtering, so we accept all rows
             return Optional.of(new YtdMilesTrip(company, request_datetime, trip_miles));
         } catch (Exception e) {
-            // If parsing fails, return empty
             return Optional.empty();
         }
     }

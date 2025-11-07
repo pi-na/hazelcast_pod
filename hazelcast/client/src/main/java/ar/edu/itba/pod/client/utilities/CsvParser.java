@@ -36,7 +36,7 @@ public class CsvParser<V extends ParsedRow> {
         final AtomicLong keyCounter = new AtomicLong(0);
 
         try (BufferedReader reader = Files.newBufferedReader(Paths.get(csvsPath.gettripsFile()), StandardCharsets.UTF_8)) {
-            reader.readLine(); // saltar header
+            reader.readLine();
             String line;
 
             Map<Long, V> batchMap = new HashMap<>((int)(BATCH_SIZE / 0.75f) + 1, 0.75f);
@@ -63,10 +63,7 @@ public class CsvParser<V extends ParsedRow> {
     }
 
     private void loadBatchToCluster(Map<Long, V> batchMap) {
-//        long start = System.nanoTime();
         iMap.putAll(batchMap);
-        // todo importar logger de client solo debug
-//        logger.info("Batch of {} took {} ms", batchMap.size(), (System.nanoTime() - start) / 1_000_000);
         batchMap.clear();
     }
 }

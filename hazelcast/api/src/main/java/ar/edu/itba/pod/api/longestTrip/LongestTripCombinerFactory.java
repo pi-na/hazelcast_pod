@@ -23,12 +23,10 @@ public class LongestTripCombinerFactory implements CombinerFactory<Integer, Long
             if (longest == null) {
                 longest = value;
             } else {
-                // Compare by miles, if equal compare by most recent request datetime
                 int comparison = Double.compare(value.getMiles(), longest.getMiles());
                 if (comparison > 0) {
                     longest = value;
                 } else if (comparison == 0) {
-                    // Same miles, choose the most recent
                     LocalDateTime valueDate = LocalDateTime.parse(value.getRequestDateTime(), DATE_FORMATTER);
                     LocalDateTime longestDate = LocalDateTime.parse(longest.getRequestDateTime(), DATE_FORMATTER);
                     if (valueDate.isAfter(longestDate)) {

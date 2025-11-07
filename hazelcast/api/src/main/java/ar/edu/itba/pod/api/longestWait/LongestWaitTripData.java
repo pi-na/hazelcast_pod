@@ -18,7 +18,6 @@ public class LongestWaitTripData implements DataSerializable, ParsedRow {
     private String requestDatetime;
     private String pickupDatetime;
 
-    // Obligatorio para Hazelcast
     public LongestWaitTripData() {}
 
     public LongestWaitTripData(Integer puLocation,

@@ -15,7 +15,7 @@ public class AveragePriceResult implements Serializable, Comparable<AveragePrice
 
     @Override
     public int compareTo(AveragePriceResult o) {
-        int c = Double.compare(o.avgFare, this.avgFare); // desc
+        int c = Double.compare(o.avgFare, this.avgFare);
         if (c != 0) return c;
         c = this.pickUpBorough.compareTo(o.pickUpBorough);
         if (c != 0) return c;
@@ -36,7 +36,6 @@ public class AveragePriceResult implements Serializable, Comparable<AveragePrice
 
     @Override
     public String toString() {
-        // Truncate to 2 decimals (not round)
         double truncatedFare = Math.floor(avgFare * 100) / 100.0;
         return String.format("%s;%s;%.2f", pickUpBorough, company, truncatedFare);
     }

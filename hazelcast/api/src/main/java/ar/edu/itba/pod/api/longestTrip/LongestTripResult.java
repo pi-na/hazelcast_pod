@@ -15,11 +15,9 @@ public record LongestTripResult(
 
     @Override
     public String toString() {
-        // Format date from input format to output format
         LocalDateTime dateTime = LocalDateTime.parse(longestReqDateTime, INPUT_FORMATTER);
         String formattedDate = dateTime.format(OUTPUT_FORMATTER);
         
-        // Truncate miles to 2 decimals (not round)
         double truncatedMiles = Math.floor(longestMiles * 100) / 100.0;
         
         return String.format("%s;%s;%s;%.2f;%s", 
